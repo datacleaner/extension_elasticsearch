@@ -15,9 +15,9 @@
 	<name>DataCleaner - 'elasticsearch' extension</name>
 
 	<scm>
-		<connection>scm:git:git@github.com:datacleaner/extension_elasticsearch.git</connection>
-		<url>scm:git:git@github.com:datacleaner/extension_elasticsearch.git</url>
-		<developerConnection>scm:git:git@github.com:datacleaner/extension_elasticsearch.git</developerConnection>
+		<url>https://github.com/datacleaner/extension_elasticsearch</url>
+		<connection>scm:git:https://github.com/datacleaner/extension_elasticsearch.git</connection>
+		<developerConnection>scm:git:https://github.com/datacleaner/extension_elasticsearch.git</developerConnection>
 	</scm>
 
 	<build>
