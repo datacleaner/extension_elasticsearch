@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extension xmlns="http://eobjects.org/datacleaner/extension/1.0">
 	<name>Elasticsearch indexing and searching</name>
+	<description>Searching reference data is a critical discipline in data quality applications. This is an extension that allows you to build and search a index on a ElasticSearch machine/cluster. Although the focus is on data quality applications, the extension can technically be applied to any situation where you need batch indexing and batch searching using ElasticSearch.</description>
 	<package>org.eobjects.datacleaner.extension.elasticsearch</package>
-	<icon>org/eobjects/datacleaner/extension/elasticsearch/ElasticSearchIndexAnalyzer.png</icon>
+	<icon>org/eobjects/datacleaner/extension/elasticsearch/ElasticSearchCategory.png</icon>
 </extension>
