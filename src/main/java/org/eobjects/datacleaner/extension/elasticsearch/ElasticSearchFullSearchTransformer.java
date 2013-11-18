@@ -25,7 +25,7 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -60,6 +60,12 @@ public class ElasticSearchFullSearchTransformer implements Transformer<Object> {
     @Configured
     String documentType;
 
+    @Configured(required = false)
+    String analyzerName;
+
+    @Configured(required = false)
+    String searchFieldName;
+
     private ElasticSearchClientFactory _clientFactory;
 
     @Initialize
@@ -85,10 +91,20 @@ public class ElasticSearchFullSearchTransformer implements Transformer<Object> {
 
         final Client client = _clientFactory.create();
         try {
-            final QueryBuilder query = QueryBuilders.queryString(input);
+            MatchQueryBuilder query;
+            if (StringUtils.isNullOrEmpty(searchFieldName)) {
+                query = QueryBuilders.matchQuery("_all", input);
+            } else {
+                query = QueryBuilders.matchQuery(searchFieldName, input);
+            }
+
+            if (!StringUtils.isNullOrEmpty(analyzerName)) {
+                query = query.analyzer(analyzerName);
+            }
+
             final SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(client).setIndices(indexName)
                     .setTypes(documentType).setQuery(query).setSize(1).setSearchType(SearchType.QUERY_AND_FETCH)
-                    .setExplain(true);
+                    .setExplain(true).setOperationThreading("no_threads");
 
             final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
             final SearchHits hits = searchResponse.getHits();
