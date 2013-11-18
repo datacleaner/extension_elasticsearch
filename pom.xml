@@ -8,7 +8,7 @@
 	<properties>
 		<elasticsearch.version>0.90.7</elasticsearch.version>
 	</properties>
-	<groupId>org.datacleaner.extensions</groupId>
+	<groupId>org.eobjects.datacleaner.extensions</groupId>
 	<artifactId>DataCleaner-elasticsearch</artifactId>
 	<version>1.0</version>
 	<packaging>jar</packaging>
