@@ -36,11 +36,15 @@ import org.eobjects.analyzer.beans.convert.ConvertToStringTransformer;
 import org.eobjects.analyzer.data.InputColumn;
 import org.eobjects.analyzer.data.InputRow;
 import org.eobjects.analyzer.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @TransformerBean("ElasticSearch document ID lookup")
 @Description("Look up documents in ElasticSearch by providing a document ID")
 @Categorized(ElasticSearchCategory.class)
 public class ElasticSearchDocumentIdLookupTransformer implements Transformer<String> {
+
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearchDocumentIdLookupTransformer.class);
 
     @Configured
     InputColumn<?> documentId;
@@ -96,8 +100,12 @@ public class ElasticSearchDocumentIdLookupTransformer implements Transformer<Str
             for (int i = 0; i < fields.length; i++) {
                 final String field = fields[i];
                 final GetField valueGetter = response.getField(field);
-                final Object value = valueGetter.getValue();
-                result[i] = ConvertToStringTransformer.transformValue(value);
+                if (valueGetter == null) {
+                    logger.info("Document with id '{}' did not have the field '{}'", id, field);
+                } else {
+                    final Object value = valueGetter.getValue();
+                    result[i] = ConvertToStringTransformer.transformValue(value);
+                }
             }
         } finally {
             client.close();
