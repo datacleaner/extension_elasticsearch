@@ -30,6 +30,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.eobjects.analyzer.beans.api.Categorized;
+import org.eobjects.analyzer.beans.api.Close;
 import org.eobjects.analyzer.beans.api.Configured;
 import org.eobjects.analyzer.beans.api.Description;
 import org.eobjects.analyzer.beans.api.Initialize;
@@ -73,6 +74,11 @@ public class ElasticSearchFullSearchTransformer implements Transformer<Object> {
         _clientFactory = new ElasticSearchClientFactory(clusterHosts, clusterName);
     }
 
+    @Close
+    public void close() {
+        _clientFactory.close();
+    }
+
     @Override
     public OutputColumns getOutputColumns() {
         String[] names = new String[] { "Document ID", "Document" };
@@ -89,36 +95,31 @@ public class ElasticSearchFullSearchTransformer implements Transformer<Object> {
             return result;
         }
 
-        final Client client = _clientFactory.create();
-        try {
-            MatchQueryBuilder query;
-            if (StringUtils.isNullOrEmpty(searchFieldName)) {
-                query = QueryBuilders.matchQuery("_all", input);
-            } else {
-                query = QueryBuilders.matchQuery(searchFieldName, input);
-            }
-
-            if (!StringUtils.isNullOrEmpty(analyzerName)) {
-                query = query.analyzer(analyzerName);
-            }
-
-            final SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(client).setIndices(indexName)
-                    .setTypes(documentType).setQuery(query).setSize(1).setSearchType(SearchType.QUERY_AND_FETCH)
-                    .setExplain(true).setOperationThreading("no_threads");
-
-            final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
-            final SearchHits hits = searchResponse.getHits();
-            if (hits.getTotalHits() == 0) {
-                return result;
-            }
-
-            final SearchHit hit = hits.getAt(0);
-            result[0] = hit.getId();
-            result[1] = hit.sourceAsMap();
-
-        } finally {
-            client.close();
+        final Client client = _clientFactory.get();
+        MatchQueryBuilder query;
+        if (StringUtils.isNullOrEmpty(searchFieldName)) {
+            query = QueryBuilders.matchQuery("_all", input);
+        } else {
+            query = QueryBuilders.matchQuery(searchFieldName, input);
         }
+
+        if (!StringUtils.isNullOrEmpty(analyzerName)) {
+            query = query.analyzer(analyzerName);
+        }
+
+        final SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(client).setIndices(indexName)
+                .setTypes(documentType).setQuery(query).setSize(1).setSearchType(SearchType.QUERY_AND_FETCH)
+                .setExplain(true).setOperationThreading("no_threads");
+
+        final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
+        final SearchHits hits = searchResponse.getHits();
+        if (hits.getTotalHits() == 0) {
+            return result;
+        }
+
+        final SearchHit hit = hits.getAt(0);
+        result[0] = hit.getId();
+        result[1] = hit.sourceAsMap();
 
         return result;
     }

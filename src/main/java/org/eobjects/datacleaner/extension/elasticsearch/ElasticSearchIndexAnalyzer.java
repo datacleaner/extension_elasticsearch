@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.eobjects.analyzer.beans.api.Analyzer;
 import org.eobjects.analyzer.beans.api.AnalyzerBean;
 import org.eobjects.analyzer.beans.api.Categorized;
+import org.eobjects.analyzer.beans.api.Close;
 import org.eobjects.analyzer.beans.api.Configured;
 import org.eobjects.analyzer.beans.api.Description;
 import org.eobjects.analyzer.beans.api.Initialize;
@@ -83,6 +84,11 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
         _counter = new AtomicInteger(0);
         _writeBuffer = new WriteBuffer(bulkIndexSize, new ElasticSearchIndexFlushAction(_clientFactory, fields,
                 indexName, documentType));
+    }
+
+    @Close
+    public void close() {
+        _clientFactory.close();
     }
 
     @Override

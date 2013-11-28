@@ -26,6 +26,7 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.get.GetField;
 import org.eobjects.analyzer.beans.api.Categorized;
+import org.eobjects.analyzer.beans.api.Close;
 import org.eobjects.analyzer.beans.api.Configured;
 import org.eobjects.analyzer.beans.api.Description;
 import org.eobjects.analyzer.beans.api.Initialize;
@@ -72,6 +73,11 @@ public class ElasticSearchDocumentIdLookupTransformer implements Transformer<Str
         _clientFactory = new ElasticSearchClientFactory(clusterHosts, clusterName);
     }
 
+    @Close
+    public void close() {
+        _clientFactory.close();
+    }
+
     @Override
     public OutputColumns getOutputColumns() {
         return new OutputColumns(fields);
@@ -86,29 +92,25 @@ public class ElasticSearchDocumentIdLookupTransformer implements Transformer<Str
             return result;
         }
 
-        final Client client = _clientFactory.create();
-        try {
-            final GetRequest request = new GetRequestBuilder(client).setId(id).setType(documentType).setFields(fields)
-                    .setIndex(indexName).setOperationThreaded(false).request();
-            final ActionFuture<GetResponse> getFuture = client.get(request);
-            final GetResponse response = getFuture.actionGet();
+        final Client client = _clientFactory.get();
+        final GetRequest request = new GetRequestBuilder(client).setId(id).setType(documentType).setFields(fields)
+                .setIndex(indexName).setOperationThreaded(false).request();
+        final ActionFuture<GetResponse> getFuture = client.get(request);
+        final GetResponse response = getFuture.actionGet();
 
-            if (!response.isExists()) {
-                return result;
-            }
+        if (!response.isExists()) {
+            return result;
+        }
 
-            for (int i = 0; i < fields.length; i++) {
-                final String field = fields[i];
-                final GetField valueGetter = response.getField(field);
-                if (valueGetter == null) {
-                    logger.info("Document with id '{}' did not have the field '{}'", id, field);
-                } else {
-                    final Object value = valueGetter.getValue();
-                    result[i] = ConvertToStringTransformer.transformValue(value);
-                }
+        for (int i = 0; i < fields.length; i++) {
+            final String field = fields[i];
+            final GetField valueGetter = response.getField(field);
+            if (valueGetter == null) {
+                logger.info("Document with id '{}' did not have the field '{}'", id, field);
+            } else {
+                final Object value = valueGetter.getValue();
+                result[i] = ConvertToStringTransformer.transformValue(value);
             }
-        } finally {
-            client.close();
         }
 
         return result;

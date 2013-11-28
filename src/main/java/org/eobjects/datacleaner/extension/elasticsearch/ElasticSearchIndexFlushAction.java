@@ -53,7 +53,7 @@ public class ElasticSearchIndexFlushAction implements Action<Iterable<Object[]>>
 
     @Override
     public void run(Iterable<Object[]> rows) throws Exception {
-        final Client client = _clientFactory.create();
+        final Client client = _clientFactory.get();
         try {
             final BulkRequestBuilder bulkRequestBuilder = new BulkRequestBuilder(client);
 
@@ -89,8 +89,6 @@ public class ElasticSearchIndexFlushAction implements Action<Iterable<Object[]>>
         } catch (Exception e) {
             logger.error("Unexpected error occurred while flushing ElasticSearch index buffer", e);
             throw e;
-        } finally {
-            client.close();
         }
     }
 

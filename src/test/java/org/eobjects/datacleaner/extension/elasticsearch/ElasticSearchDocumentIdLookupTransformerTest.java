@@ -87,5 +87,7 @@ public class ElasticSearchDocumentIdLookupTransformerTest extends TestCase {
             e.printStackTrace();
             throw e;
         }
+        
+        transformer.close();
     }
 }

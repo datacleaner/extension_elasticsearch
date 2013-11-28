@@ -75,5 +75,7 @@ public class ElasticSearchIndexAnalyzerTest extends TestCase {
             e.printStackTrace();
             throw e;
         }
+        
+        analyzer.close();
     }
 }

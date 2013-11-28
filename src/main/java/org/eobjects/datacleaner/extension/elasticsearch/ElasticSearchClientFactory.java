@@ -19,14 +19,16 @@
  */
 package org.eobjects.datacleaner.extension.elasticsearch;
 
-import org.elasticsearch.client.Client;
+import java.io.Closeable;
+
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
+import org.eobjects.metamodel.util.LazyRef;
 
-public class ElasticSearchClientFactory {
+public class ElasticSearchClientFactory extends LazyRef<TransportClient> implements Closeable {
 
     private final TransportAddress[] _transportAddresses;
     private final Settings _settings;
@@ -46,15 +48,23 @@ public class ElasticSearchClientFactory {
             _transportAddresses[i] = transportAddress;
         }
         _settings = ImmutableSettings.builder().put("name", "DataCleaner").put("cluster.name", clusterName).build();
+
     }
 
-    public Client create() {
-        final TransportClient transportClient = new TransportClient(_settings, false);
+    @Override
+    protected TransportClient fetch() throws Throwable {
+        TransportClient transportClient = new TransportClient(_settings, false);
 
         for (TransportAddress transportAddress : _transportAddresses) {
             transportClient.addTransportAddress(transportAddress);
         }
-
         return transportClient;
+    }
+
+    @Override
+    public void close() {
+        if (isFetched()) {
+            get().close();
+        }
     }
 }

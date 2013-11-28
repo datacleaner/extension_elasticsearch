@@ -83,5 +83,7 @@ public class ElasticSearchFullSearchTransformerTest extends TestCase {
             e.printStackTrace();
             throw e;
         }
+        
+        transformer.close();
     }
 }
