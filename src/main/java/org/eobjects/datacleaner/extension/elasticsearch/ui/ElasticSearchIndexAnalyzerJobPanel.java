@@ -19,6 +19,7 @@
  */
 package org.eobjects.datacleaner.extension.elasticsearch.ui;
 
+import org.eobjects.analyzer.data.InputColumn;
 import org.eobjects.analyzer.descriptors.ConfiguredPropertyDescriptor;
 import org.eobjects.analyzer.job.builder.AbstractBeanJobBuilder;
 import org.eobjects.analyzer.job.builder.AnalyzerJobBuilder;
@@ -43,7 +44,12 @@ public class ElasticSearchIndexAnalyzerJobPanel extends AnalyzerJobBuilderPanel 
         _mappedStringsProperty = analyzerJobBuilder.getDescriptor().getConfiguredProperty("Fields");
 
         _mappedWidget = new MultipleMappedStringsPropertyWidget(analyzerJobBuilder, _inputColumnsProperty,
-                _mappedStringsProperty);
+                _mappedStringsProperty) {
+            @Override
+            protected String getDefaultMappedString(InputColumn<?> inputColumn) {
+                return inputColumn.getName();
+            }
+        };
     }
 
     @Override
