@@ -22,6 +22,7 @@ package org.eobjects.datacleaner.extension.elasticsearch;
 import java.io.Closeable;
 
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -34,14 +35,16 @@ import org.eobjects.metamodel.util.LazyRef;
 public class ElasticSearchClientFactory extends LazyRef<Client> implements Closeable {
 
     private TransportAddress[] _transportAddresses;
-    private Settings _settings;
-    private String _clusterName;
+    private final Settings _settings;
     private boolean isTransportClient = true;
+    private Node _node;
 
     public ElasticSearchClientFactory(String[] hosts, String clusterName) {
-        _clusterName = clusterName;
         if (hosts == null || hosts.length <= 0) {
+            _settings = ImmutableSettings.settingsBuilder().put("http.enabled", true).put("node.name", "DataCleanerNode")
+                    .put("cluster.name", clusterName).build();
             isTransportClient = false;
+
         } else {
             _transportAddresses = new TransportAddress[hosts.length];
             for (int i = 0; i < hosts.length; i++) {
@@ -56,7 +59,7 @@ public class ElasticSearchClientFactory extends LazyRef<Client> implements Close
                 InetSocketTransportAddress transportAddress = new InetSocketTransportAddress(hostname, port);
                 _transportAddresses[i] = transportAddress;
             }
-            _settings = ImmutableSettings.builder().put("name", "DataCleaner").put("cluster.name", _clusterName).build();
+            _settings = ImmutableSettings.builder().put("name", "DataCleaner").put("cluster.name", clusterName).build();
 
         }
 
@@ -74,9 +77,9 @@ public class ElasticSearchClientFactory extends LazyRef<Client> implements Close
                 ((TransportClient) client).addTransportAddress(transportAddress);
             }
         } else {
-            Node node = NodeBuilder.nodeBuilder().client(true).clusterName(_clusterName).node();
-            client = node.client();
 
+            _node = NodeBuilder.nodeBuilder().client(true).settings(_settings).node();
+            client = _node.client();
         }
 
         return client;
@@ -86,6 +89,10 @@ public class ElasticSearchClientFactory extends LazyRef<Client> implements Close
     public void close() {
         if (isFetched()) {
             get().close();
+            if (get() instanceof NodeClient) {
+                _node.close();
+            }
+
         }
     }
 }
