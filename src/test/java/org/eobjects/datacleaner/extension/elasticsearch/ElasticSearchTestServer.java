@@ -118,12 +118,12 @@ public class ElasticSearchTestServer {
         System.out.println("--- ElasticSearchTestServer closed ---");
     }
 
-    public void addDocument(String id, Map<?,?> map) {
+    public void addDocument(String id, Map<?, ?> map) {
         final IndexRequest indexRequest = new IndexRequest(INDEX_NAME, DOCUMENT_TYPE, id).source(map);
         Client client = getClient();
         try {
             client.index(indexRequest).actionGet();
-            
+
             client.admin().indices().refresh(new RefreshRequest(INDEX_NAME)).actionGet();
         } finally {
             client.close();

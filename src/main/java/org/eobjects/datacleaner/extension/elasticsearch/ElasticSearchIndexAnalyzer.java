@@ -45,8 +45,8 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchIndexAnalyzer.class);
 
-    @Configured
-    String[] clusterHosts = { "localhost:9300" };
+    @Configured(required = false)
+    String[] clusterHosts = new String[0];
 
     @Configured
     String clusterName = "elasticsearch";

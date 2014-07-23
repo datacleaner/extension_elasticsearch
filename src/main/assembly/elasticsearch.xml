@@ -13,8 +13,7 @@
 			<includes>
 				<include>org.eobjects.datacleaner.extensions:*</include>
 				<include>org.elasticsearch:*</include>
-				<include>org.apache.lucene:lucene-core</include>
-				<include>org.apache.lucene:lucene-analyzers-common</include>
+				<include>org.apache.lucene:*</include>
 			</includes>
 		</dependencySet>
 	</dependencySets>

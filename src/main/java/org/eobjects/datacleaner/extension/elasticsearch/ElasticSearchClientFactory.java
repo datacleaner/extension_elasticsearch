@@ -21,50 +21,78 @@ package org.eobjects.datacleaner.extension.elasticsearch;
 
 import java.io.Closeable;
 
+import org.elasticsearch.client.Client;
+import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.node.Node;
+import org.elasticsearch.node.NodeBuilder;
 import org.eobjects.metamodel.util.LazyRef;
 
-public class ElasticSearchClientFactory extends LazyRef<TransportClient> implements Closeable {
+public class ElasticSearchClientFactory extends LazyRef<Client> implements Closeable {
 
-    private final TransportAddress[] _transportAddresses;
+    private TransportAddress[] _transportAddresses;
     private final Settings _settings;
+    private boolean isTransportClient = true;
+    private Node _node;
 
     public ElasticSearchClientFactory(String[] hosts, String clusterName) {
-        _transportAddresses = new TransportAddress[hosts.length];
-        for (int i = 0; i < hosts.length; i++) {
-            String hostname = hosts[i].trim();
-            int port = 9300;
+        if (hosts == null || hosts.length <= 0) {
+            _settings = ImmutableSettings.settingsBuilder().put("http.enabled", true).put("node.name", "DataCleanerNode")
+                    .put("cluster.name", clusterName).build();
+            isTransportClient = false;
 
-            int indexOfColon = hostname.indexOf(":");
-            if (indexOfColon != -1) {
-                port = Integer.parseInt(hostname.substring(indexOfColon + 1));
-                hostname = hostname.substring(0, indexOfColon);
+        } else {
+            _transportAddresses = new TransportAddress[hosts.length];
+            for (int i = 0; i < hosts.length; i++) {
+                String hostname = hosts[i].trim();
+                int port = 9300;
+
+                int indexOfColon = hostname.indexOf(":");
+                if (indexOfColon != -1) {
+                    port = Integer.parseInt(hostname.substring(indexOfColon + 1));
+                    hostname = hostname.substring(0, indexOfColon);
+                }
+                InetSocketTransportAddress transportAddress = new InetSocketTransportAddress(hostname, port);
+                _transportAddresses[i] = transportAddress;
             }
-            InetSocketTransportAddress transportAddress = new InetSocketTransportAddress(hostname, port);
-            _transportAddresses[i] = transportAddress;
+            _settings = ImmutableSettings.builder().put("name", "DataCleaner").put("cluster.name", clusterName).build();
+
         }
-        _settings = ImmutableSettings.builder().put("name", "DataCleaner").put("cluster.name", clusterName).build();
 
     }
 
     @Override
-    protected TransportClient fetch() throws Throwable {
-        TransportClient transportClient = new TransportClient(_settings, false);
+    protected Client fetch() throws Throwable {
+        Client client;
 
-        for (TransportAddress transportAddress : _transportAddresses) {
-            transportClient.addTransportAddress(transportAddress);
+        if (isTransportClient) {
+
+            client = new TransportClient(_settings, false);
+
+            for (TransportAddress transportAddress : _transportAddresses) {
+                ((TransportClient) client).addTransportAddress(transportAddress);
+            }
+        } else {
+
+            _node = NodeBuilder.nodeBuilder().client(true).settings(_settings).node();
+            client = _node.client();
         }
-        return transportClient;
+
+        return client;
     }
 
     @Override
     public void close() {
         if (isFetched()) {
             get().close();
+            if (get() instanceof NodeClient) {
+                _node.close();
+            }
+
         }
     }
 }
