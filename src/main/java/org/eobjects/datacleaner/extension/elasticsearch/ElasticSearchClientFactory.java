@@ -65,6 +65,17 @@ public class ElasticSearchClientFactory extends LazyRef<Client> implements Close
 
     }
 
+    /**
+     * Parameterised constructor which just take clustername and provide client
+     * based on cluster name itself. Use this only when you have elastic search
+     * server running on same network as client.
+     * 
+     * @param clusterName
+     */
+    public ElasticSearchClientFactory(String clusterName) {
+        this(null, clusterName);
+    }
+
     @Override
     protected Client fetch() throws Throwable {
         Client client;
