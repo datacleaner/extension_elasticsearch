@@ -7,11 +7,11 @@
     <source>
         <data-context ref="AddressAccess.csv"/>
         <columns>
-            <column type="VARCHAR" path="AddressAccess.csv.AddressAccess.AddressAccessIdentifier" id="col_0"/>
-            <column type="VARCHAR" path="AddressAccess.csv.AddressAccess.StreetName" id="col_5"/>
-            <column type="VARCHAR" path="AddressAccess.csv.AddressAccess.StreetBuildingIdentifier" id="col_6"/>
-            <column type="VARCHAR" path="AddressAccess.csv.AddressAccess.PostCodeIdentifier" id="col_8"/>
-            <column type="VARCHAR" path="AddressAccess.csv.AddressAccess.DistrictName" id="col_9"/>
+            <column type="VARCHAR" path="AddressAccess.csv.AddressAccessIdentifier" id="col_0"/>
+            <column type="VARCHAR" path="AddressAccess.csv.StreetName" id="col_5"/>
+            <column type="VARCHAR" path="AddressAccess.csv.StreetBuildingIdentifier" id="col_6"/>
+            <column type="VARCHAR" path="AddressAccess.csv.PostCodeIdentifier" id="col_8"/>
+            <column type="VARCHAR" path="AddressAccess.csv.DistrictName" id="col_9"/>
         </columns>
     </source>
     <transformation>
