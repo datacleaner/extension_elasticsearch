@@ -30,11 +30,11 @@ import org.eobjects.analyzer.beans.api.Description;
 import org.eobjects.analyzer.beans.api.Initialize;
 import org.eobjects.analyzer.beans.api.NumberProperty;
 import org.eobjects.analyzer.beans.convert.ConvertToStringTransformer;
-import org.eobjects.analyzer.beans.writers.WriteBuffer;
 import org.eobjects.analyzer.beans.writers.WriteDataResult;
 import org.eobjects.analyzer.beans.writers.WriteDataResultImpl;
 import org.eobjects.analyzer.data.InputColumn;
 import org.eobjects.analyzer.data.InputRow;
+import org.eobjects.analyzer.util.WriteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

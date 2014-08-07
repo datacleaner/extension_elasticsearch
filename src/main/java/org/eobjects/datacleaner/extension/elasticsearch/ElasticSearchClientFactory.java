@@ -21,6 +21,7 @@ package org.eobjects.datacleaner.extension.elasticsearch;
 
 import java.io.Closeable;
 
+import org.apache.metamodel.util.LazyRef;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.client.transport.TransportClient;
@@ -30,7 +31,6 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
-import org.eobjects.metamodel.util.LazyRef;
 
 public class ElasticSearchClientFactory extends LazyRef<Client> implements Closeable {
 
@@ -41,8 +41,8 @@ public class ElasticSearchClientFactory extends LazyRef<Client> implements Close
 
     public ElasticSearchClientFactory(String[] hosts, String clusterName) {
         if (hosts == null || hosts.length <= 0) {
-            _settings = ImmutableSettings.settingsBuilder().put("http.enabled", true).put("node.name", "DataCleanerNode")
-                    .put("cluster.name", clusterName).build();
+            _settings = ImmutableSettings.settingsBuilder().put("http.enabled", true)
+                    .put("node.name", "DataCleanerNode").put("cluster.name", clusterName).build();
             isTransportClient = false;
 
         } else {
@@ -78,22 +78,20 @@ public class ElasticSearchClientFactory extends LazyRef<Client> implements Close
 
     @Override
     protected Client fetch() throws Throwable {
-        Client client;
 
         if (isTransportClient) {
-
-            client = new TransportClient(_settings, false);
+            final Client client = new TransportClient(_settings, false);
 
             for (TransportAddress transportAddress : _transportAddresses) {
                 ((TransportClient) client).addTransportAddress(transportAddress);
             }
+
+            return client;
         } else {
 
             _node = NodeBuilder.nodeBuilder().client(true).settings(_settings).node();
-            client = _node.client();
+            return _node.client();
         }
-
-        return client;
     }
 
     @Override

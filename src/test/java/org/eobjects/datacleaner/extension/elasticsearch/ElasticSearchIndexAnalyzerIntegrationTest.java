@@ -24,6 +24,8 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.apache.metamodel.util.FileResource;
+import org.apache.metamodel.util.Resource;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -42,8 +44,6 @@ import org.eobjects.analyzer.job.concurrent.MultiThreadedTaskRunner;
 import org.eobjects.analyzer.job.concurrent.TaskRunner;
 import org.eobjects.analyzer.job.runner.AnalysisResultFuture;
 import org.eobjects.analyzer.job.runner.AnalysisRunnerImpl;
-import org.eobjects.metamodel.util.FileResource;
-import org.eobjects.metamodel.util.Resource;
 
 public class ElasticSearchIndexAnalyzerIntegrationTest extends TestCase {
 
@@ -78,7 +78,7 @@ public class ElasticSearchIndexAnalyzerIntegrationTest extends TestCase {
 
         final AnalysisJob job = new JaxbJobReader(conf).create(new File("src/test/resources/es_test.analysis.xml"))
                 .toAnalysisJob();
-        
+
         _server.truncateIndex();
 
         final AnalysisResultFuture resultFuture = new AnalysisRunnerImpl(conf).run(job);
@@ -95,11 +95,10 @@ public class ElasticSearchIndexAnalyzerIntegrationTest extends TestCase {
 
         WriteDataResult result = (WriteDataResult) resultFuture.getResults().get(0);
         assertEquals(8, result.getWrittenRowCount());
-        
+
         assertEquals(8, _server.getDocumentCount());
 
-        final Client client = _server.getClient();
-        try {
+        try (Client client = _server.getClient()) {
             SearchResponse searchResponse = new SearchRequestBuilder(client)
                     .setIndices(ElasticSearchTestServer.INDEX_NAME).setTypes(ElasticSearchTestServer.DOCUMENT_TYPE)
                     .setQuery(QueryBuilders.queryString("Allersgade")).execute().actionGet();
@@ -107,8 +106,6 @@ public class ElasticSearchIndexAnalyzerIntegrationTest extends TestCase {
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
-        } finally {
-            client.close();
         }
     }
 }

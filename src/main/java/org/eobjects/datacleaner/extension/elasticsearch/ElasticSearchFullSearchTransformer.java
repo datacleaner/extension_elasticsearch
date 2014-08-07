@@ -109,7 +109,7 @@ public class ElasticSearchFullSearchTransformer implements Transformer<Object> {
 
         final SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(client).setIndices(indexName)
                 .setTypes(documentType).setQuery(query).setSize(1).setSearchType(SearchType.QUERY_AND_FETCH)
-                .setExplain(true).setOperationThreading("no_threads");
+                .setExplain(true);
 
         final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
         final SearchHits hits = searchResponse.getHits();

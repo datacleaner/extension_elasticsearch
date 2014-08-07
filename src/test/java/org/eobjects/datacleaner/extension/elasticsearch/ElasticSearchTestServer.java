@@ -71,12 +71,12 @@ public class ElasticSearchTestServer {
         settings.put("transport.tcp.port", TRANSPORT_PORT);
         _node = NodeBuilder.nodeBuilder().settings(settings).clusterName(CLUSTER_NAME).data(true).local(false).node();
 
-        Client client = _node.client();
-        IndicesAdminClient indicesAdmin = client.admin().indices();
-        if (!indicesAdmin.exists(new IndicesExistsRequest(INDEX_NAME)).actionGet().isExists()) {
-            indicesAdmin.create(new CreateIndexRequest(INDEX_NAME)).actionGet();
+        try (Client client = _node.client()) {
+            IndicesAdminClient indicesAdmin = client.admin().indices();
+            if (!indicesAdmin.exists(new IndicesExistsRequest(INDEX_NAME)).actionGet().isExists()) {
+                indicesAdmin.create(new CreateIndexRequest(INDEX_NAME)).actionGet();
+            }
         }
-        client.close();
 
         System.out.println("--- ElasticSearchTestServer started ---");
     }
@@ -86,29 +86,23 @@ public class ElasticSearchTestServer {
     }
 
     public IndexDeleteByQueryResponse truncateIndex() throws InterruptedException, ExecutionException {
-        Client client = getClient();
-        try {
+        try (Client client = getClient()) {
             QueryBuilder queryBuilder = new MatchAllQueryBuilder();
             ListenableActionFuture<DeleteByQueryResponse> response = client.prepareDeleteByQuery(INDEX_NAME)
                     .setTypes(DOCUMENT_TYPE).setQuery(queryBuilder).execute();
             DeleteByQueryResponse deleteByQueryResponse = response.get();
             IndexDeleteByQueryResponse indexResult = deleteByQueryResponse.getIndex(INDEX_NAME);
             return indexResult;
-        } finally {
-            client.close();
         }
     }
 
     public long getDocumentCount() throws Exception {
-        Client client = getClient();
-        try {
+        try (Client client = getClient()) {
             client.admin().indices().refresh(new RefreshRequest(INDEX_NAME)).actionGet();
 
             ActionFuture<CountResponse> response = client.count(new CountRequest(INDEX_NAME).types(DOCUMENT_TYPE));
             CountResponse countResponse = response.get();
             return countResponse.getCount();
-        } finally {
-            client.close();
         }
     }
 
@@ -120,13 +114,10 @@ public class ElasticSearchTestServer {
 
     public void addDocument(String id, Map<?, ?> map) {
         final IndexRequest indexRequest = new IndexRequest(INDEX_NAME, DOCUMENT_TYPE, id).source(map);
-        Client client = getClient();
-        try {
+        try (Client client = getClient()) {
             client.index(indexRequest).actionGet();
 
             client.admin().indices().refresh(new RefreshRequest(INDEX_NAME)).actionGet();
-        } finally {
-            client.close();
         }
     }
 }

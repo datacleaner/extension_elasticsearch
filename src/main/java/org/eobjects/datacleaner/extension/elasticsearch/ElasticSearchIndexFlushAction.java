@@ -22,12 +22,12 @@ package org.eobjects.datacleaner.extension.elasticsearch;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.metamodel.util.Action;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
-import org.eobjects.metamodel.util.Action;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
