@@ -19,6 +19,7 @@
  */
 package org.eobjects.datacleaner.extension.elasticsearch;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,6 +65,11 @@ public class ElasticSearchIndexFlushAction implements Action<Iterable<Object[]>>
                     String field = _fields[i - 1];
                     Object value = row[i];
                     if (value != null) {
+                        final Object valueInMap = map.get(field);
+                        //If already a value exist for a field, then add to the list.
+                        if (valueInMap != null) {
+                           value = Arrays.asList(valueInMap, value); 
+                        }
                         map.put(field, value);
                     }
                 }
