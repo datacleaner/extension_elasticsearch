@@ -65,9 +65,12 @@ public class ElasticSearchTestServer {
     public void startup() throws Exception {
         ImmutableSettings.Builder settings = ImmutableSettings.settingsBuilder();
         settings.put("node.name", "testnode");
+        settings.put("gateway.type", "none");
         settings.put("path.data", "target/search-data");
         settings.put("http.enabled", true);
+        
         settings.put("http.port", HTTP_PORT);
+        //settings.put("index.compound_format", false);
         settings.put("transport.tcp.port", TRANSPORT_PORT);
         _node = NodeBuilder.nodeBuilder().settings(settings).clusterName(CLUSTER_NAME).data(true).local(false).node();
 
@@ -107,9 +110,9 @@ public class ElasticSearchTestServer {
     }
 
     public void close() {
+        _node.client().close();
         _node.close();
-
-        System.out.println("--- ElasticSearchTestServer closed ---");
+        System.out.println("--- ElasticSearchTestServer closed ---" + _node.isClosed());
     }
 
     public void addDocument(String id, Map<?, ?> map) {
