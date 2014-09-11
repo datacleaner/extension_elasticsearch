@@ -10,7 +10,7 @@
 	</properties>
 	<groupId>org.eobjects.datacleaner.extensions</groupId>
 	<artifactId>DataCleaner-elasticsearch</artifactId>
-	<version>1.4-SNAPSHOT</version>
+	<version>1.4</version>
 	<packaging>jar</packaging>
 	<name>DataCleaner - 'elasticsearch' extension</name>
 
@@ -18,7 +18,7 @@
 		<url>https://github.com/datacleaner/extension_elasticsearch</url>
 		<connection>scm:git:https://github.com/datacleaner/extension_elasticsearch.git</connection>
 		<developerConnection>scm:git:https://github.com/datacleaner/extension_elasticsearch.git</developerConnection>
-	  <tag>HEAD</tag>
+	  <tag>DataCleaner-elasticsearch-1.4</tag>
   </scm>
 
 	<build>
