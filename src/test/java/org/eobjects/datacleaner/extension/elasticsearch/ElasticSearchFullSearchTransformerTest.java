@@ -19,6 +19,9 @@
  */
 package org.eobjects.datacleaner.extension.elasticsearch;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 import junit.framework.TestCase;
 
 import org.elasticsearch.common.collect.MapBuilder;
@@ -73,7 +76,11 @@ public class ElasticSearchFullSearchTransformerTest extends TestCase {
             
             output = transformer.transform(new MockInputRow().put(col1, "Copenhagen"));
             assertEquals("cph", String.valueOf(output[0]));
-            assertEquals("{city=Copenhagen, country=Denmark}", String.valueOf(output[1]));
+            
+            @SuppressWarnings("unchecked")
+            Map<String,?> map = (Map<String, ?>) output[1];
+            assertNotNull(map);
+            assertEquals("{city=Copenhagen, country=Denmark}", new TreeMap<>(map).toString());
             
             output = transformer.transform(new MockInputRow().put(col1, "n/a"));
             assertEquals("null", String.valueOf(output[0]));
