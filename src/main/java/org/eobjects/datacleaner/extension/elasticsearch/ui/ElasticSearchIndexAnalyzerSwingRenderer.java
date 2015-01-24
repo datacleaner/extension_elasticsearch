@@ -21,25 +21,24 @@ package org.eobjects.datacleaner.extension.elasticsearch.ui;
 
 import javax.inject.Inject;
 
-import org.eobjects.analyzer.beans.api.Renderer;
-import org.eobjects.analyzer.beans.api.RendererBean;
-import org.eobjects.analyzer.beans.api.RendererPrecedence;
-import org.eobjects.analyzer.job.builder.AnalyzerJobBuilder;
+import org.datacleaner.api.Renderer;
+import org.datacleaner.api.RendererBean;
+import org.datacleaner.api.RendererPrecedence;
+import org.datacleaner.job.builder.AnalyzerComponentBuilder;
+import org.datacleaner.panels.AnalyzerComponentBuilderPresenter;
+import org.datacleaner.panels.ComponentBuilderPresenterRenderingFormat;
+import org.datacleaner.widgets.properties.PropertyWidgetFactory;
 import org.eobjects.datacleaner.extension.elasticsearch.ElasticSearchIndexAnalyzer;
-import org.eobjects.datacleaner.guice.InjectorBuilder;
-import org.eobjects.datacleaner.panels.AnalyzerJobBuilderPresenter;
-import org.eobjects.datacleaner.panels.ComponentJobBuilderRenderingFormat;
-import org.eobjects.datacleaner.widgets.properties.PropertyWidgetFactory;
 
-@RendererBean(ComponentJobBuilderRenderingFormat.class)
+@RendererBean(ComponentBuilderPresenterRenderingFormat.class)
 public class ElasticSearchIndexAnalyzerSwingRenderer implements
-        Renderer<AnalyzerJobBuilder<ElasticSearchIndexAnalyzer>, AnalyzerJobBuilderPresenter> {
+        Renderer<AnalyzerComponentBuilder<ElasticSearchIndexAnalyzer>, AnalyzerComponentBuilderPresenter> {
 
     @Inject
-    InjectorBuilder injectorBuilder;
+    PropertyWidgetFactory propertyWidgetFactory;
 
     @Override
-    public RendererPrecedence getPrecedence(AnalyzerJobBuilder<ElasticSearchIndexAnalyzer> ajb) {
+    public RendererPrecedence getPrecedence(AnalyzerComponentBuilder<ElasticSearchIndexAnalyzer> ajb) {
         Class<ElasticSearchIndexAnalyzer> componentClass = ajb.getDescriptor().getComponentClass();
         if (componentClass == ElasticSearchIndexAnalyzer.class) {
             return RendererPrecedence.HIGH;
@@ -48,9 +47,7 @@ public class ElasticSearchIndexAnalyzerSwingRenderer implements
     }
 
     @Override
-    public AnalyzerJobBuilderPresenter render(AnalyzerJobBuilder<ElasticSearchIndexAnalyzer> ajb) {
-        InjectorBuilder injector = injectorBuilder.with(PropertyWidgetFactory.TYPELITERAL_BEAN_JOB_BUILDER, ajb);
-        PropertyWidgetFactory propertyWidgetFactory = injector.getInstance(PropertyWidgetFactory.class);
+    public AnalyzerComponentBuilderPresenter render(AnalyzerComponentBuilder<ElasticSearchIndexAnalyzer> ajb) {
         return new ElasticSearchIndexAnalyzerJobPanel(ajb, propertyWidgetFactory);
     }
 

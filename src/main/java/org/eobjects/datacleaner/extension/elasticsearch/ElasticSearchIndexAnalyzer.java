@@ -21,24 +21,25 @@ package org.eobjects.datacleaner.extension.elasticsearch;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.eobjects.analyzer.beans.api.Analyzer;
-import org.eobjects.analyzer.beans.api.AnalyzerBean;
-import org.eobjects.analyzer.beans.api.Categorized;
-import org.eobjects.analyzer.beans.api.Close;
-import org.eobjects.analyzer.beans.api.Configured;
-import org.eobjects.analyzer.beans.api.Description;
-import org.eobjects.analyzer.beans.api.Initialize;
-import org.eobjects.analyzer.beans.api.NumberProperty;
-import org.eobjects.analyzer.beans.convert.ConvertToStringTransformer;
-import org.eobjects.analyzer.beans.writers.WriteDataResult;
-import org.eobjects.analyzer.beans.writers.WriteDataResultImpl;
-import org.eobjects.analyzer.data.InputColumn;
-import org.eobjects.analyzer.data.InputRow;
-import org.eobjects.analyzer.util.WriteBuffer;
+import javax.inject.Named;
+
+import org.datacleaner.api.Analyzer;
+import org.datacleaner.api.Categorized;
+import org.datacleaner.api.Close;
+import org.datacleaner.api.Configured;
+import org.datacleaner.api.Description;
+import org.datacleaner.api.Initialize;
+import org.datacleaner.api.InputColumn;
+import org.datacleaner.api.InputRow;
+import org.datacleaner.api.NumberProperty;
+import org.datacleaner.beans.writers.WriteDataResult;
+import org.datacleaner.beans.writers.WriteDataResultImpl;
+import org.datacleaner.components.convert.ConvertToStringTransformer;
+import org.datacleaner.util.WriteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@AnalyzerBean("ElasticSearch indexer")
+@Named("ElasticSearch indexer")
 @Description("Consumes records and indexes them in a ElasticSearch search index.")
 @Categorized(ElasticSearchCategory.class)
 public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {

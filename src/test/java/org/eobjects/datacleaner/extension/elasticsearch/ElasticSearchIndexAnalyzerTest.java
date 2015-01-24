@@ -21,9 +21,9 @@ package org.eobjects.datacleaner.extension.elasticsearch;
 
 import junit.framework.TestCase;
 
-import org.eobjects.analyzer.data.InputColumn;
-import org.eobjects.analyzer.data.MockInputColumn;
-import org.eobjects.analyzer.data.MockInputRow;
+import org.datacleaner.api.InputColumn;
+import org.datacleaner.data.MockInputColumn;
+import org.datacleaner.data.MockInputRow;
 
 public class ElasticSearchIndexAnalyzerTest extends TestCase {
 
@@ -75,7 +75,7 @@ public class ElasticSearchIndexAnalyzerTest extends TestCase {
             e.printStackTrace();
             throw e;
         }
-        
+
         analyzer.close();
     }
 }

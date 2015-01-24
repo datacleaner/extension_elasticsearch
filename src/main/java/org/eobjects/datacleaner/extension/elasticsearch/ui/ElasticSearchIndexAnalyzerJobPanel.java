@@ -19,16 +19,16 @@
  */
 package org.eobjects.datacleaner.extension.elasticsearch.ui;
 
-import org.eobjects.analyzer.data.InputColumn;
-import org.eobjects.analyzer.descriptors.ConfiguredPropertyDescriptor;
-import org.eobjects.analyzer.job.builder.AbstractBeanJobBuilder;
-import org.eobjects.analyzer.job.builder.AnalyzerJobBuilder;
-import org.eobjects.datacleaner.panels.AnalyzerJobBuilderPanel;
-import org.eobjects.datacleaner.widgets.properties.MultipleMappedStringsPropertyWidget;
-import org.eobjects.datacleaner.widgets.properties.PropertyWidget;
-import org.eobjects.datacleaner.widgets.properties.PropertyWidgetFactory;
+import org.datacleaner.api.InputColumn;
+import org.datacleaner.descriptors.ConfiguredPropertyDescriptor;
+import org.datacleaner.job.builder.AnalyzerComponentBuilder;
+import org.datacleaner.job.builder.ComponentBuilder;
+import org.datacleaner.panels.AnalyzerComponentBuilderPanel;
+import org.datacleaner.widgets.properties.MultipleMappedStringsPropertyWidget;
+import org.datacleaner.widgets.properties.PropertyWidget;
+import org.datacleaner.widgets.properties.PropertyWidgetFactory;
 
-public class ElasticSearchIndexAnalyzerJobPanel extends AnalyzerJobBuilderPanel {
+public class ElasticSearchIndexAnalyzerJobPanel extends AnalyzerComponentBuilderPanel {
 
     private static final long serialVersionUID = 1L;
 
@@ -36,7 +36,7 @@ public class ElasticSearchIndexAnalyzerJobPanel extends AnalyzerJobBuilderPanel 
     private final ConfiguredPropertyDescriptor _inputColumnsProperty;
     private final ConfiguredPropertyDescriptor _mappedStringsProperty;
 
-    public ElasticSearchIndexAnalyzerJobPanel(AnalyzerJobBuilder<?> analyzerJobBuilder,
+    public ElasticSearchIndexAnalyzerJobPanel(AnalyzerComponentBuilder<?> analyzerJobBuilder,
             PropertyWidgetFactory propertyWidgetFactory) {
         super(analyzerJobBuilder, propertyWidgetFactory);
 
@@ -53,13 +53,13 @@ public class ElasticSearchIndexAnalyzerJobPanel extends AnalyzerJobBuilderPanel 
     }
 
     @Override
-    protected PropertyWidget<?> createPropertyWidget(AbstractBeanJobBuilder<?, ?, ?> beanJobBuilder,
+    protected PropertyWidget<?> createPropertyWidget(ComponentBuilder componentBuilder,
             ConfiguredPropertyDescriptor propertyDescriptor) {
         if (propertyDescriptor == _inputColumnsProperty) {
             return _mappedWidget;
         } else if (propertyDescriptor == _mappedStringsProperty) {
             return _mappedWidget.getMappedStringsPropertyWidget();
         }
-        return super.createPropertyWidget(beanJobBuilder, propertyDescriptor);
+        return super.createPropertyWidget(componentBuilder, propertyDescriptor);
     }
 }

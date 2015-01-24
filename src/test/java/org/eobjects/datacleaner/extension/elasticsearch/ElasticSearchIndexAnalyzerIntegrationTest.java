@@ -26,24 +26,24 @@ import junit.framework.TestCase;
 
 import org.apache.metamodel.util.FileResource;
 import org.apache.metamodel.util.Resource;
+import org.datacleaner.beans.writers.WriteDataResult;
+import org.datacleaner.components.maxrows.MaxRowsFilter;
+import org.datacleaner.configuration.AnalyzerBeansConfiguration;
+import org.datacleaner.configuration.AnalyzerBeansConfigurationImpl;
+import org.datacleaner.connection.CsvDatastore;
+import org.datacleaner.connection.DatastoreCatalogImpl;
+import org.datacleaner.descriptors.Descriptors;
+import org.datacleaner.descriptors.SimpleDescriptorProvider;
+import org.datacleaner.job.AnalysisJob;
+import org.datacleaner.job.JaxbJobReader;
+import org.datacleaner.job.concurrent.MultiThreadedTaskRunner;
+import org.datacleaner.job.concurrent.TaskRunner;
+import org.datacleaner.job.runner.AnalysisResultFuture;
+import org.datacleaner.job.runner.AnalysisRunnerImpl;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.eobjects.analyzer.beans.filter.MaxRowsFilter;
-import org.eobjects.analyzer.beans.writers.WriteDataResult;
-import org.eobjects.analyzer.configuration.AnalyzerBeansConfiguration;
-import org.eobjects.analyzer.configuration.AnalyzerBeansConfigurationImpl;
-import org.eobjects.analyzer.connection.CsvDatastore;
-import org.eobjects.analyzer.connection.DatastoreCatalogImpl;
-import org.eobjects.analyzer.descriptors.Descriptors;
-import org.eobjects.analyzer.descriptors.SimpleDescriptorProvider;
-import org.eobjects.analyzer.job.AnalysisJob;
-import org.eobjects.analyzer.job.JaxbJobReader;
-import org.eobjects.analyzer.job.concurrent.MultiThreadedTaskRunner;
-import org.eobjects.analyzer.job.concurrent.TaskRunner;
-import org.eobjects.analyzer.job.runner.AnalysisResultFuture;
-import org.eobjects.analyzer.job.runner.AnalysisRunnerImpl;
 
 public class ElasticSearchIndexAnalyzerIntegrationTest extends TestCase {
 

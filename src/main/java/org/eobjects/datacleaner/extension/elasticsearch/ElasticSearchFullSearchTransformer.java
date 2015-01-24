@@ -21,6 +21,18 @@ package org.eobjects.datacleaner.extension.elasticsearch;
 
 import java.util.Map;
 
+import javax.inject.Named;
+
+import org.datacleaner.api.Categorized;
+import org.datacleaner.api.Close;
+import org.datacleaner.api.Configured;
+import org.datacleaner.api.Description;
+import org.datacleaner.api.Initialize;
+import org.datacleaner.api.InputColumn;
+import org.datacleaner.api.InputRow;
+import org.datacleaner.api.OutputColumns;
+import org.datacleaner.api.Transformer;
+import org.datacleaner.util.StringUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
@@ -29,22 +41,11 @@ import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.eobjects.analyzer.beans.api.Categorized;
-import org.eobjects.analyzer.beans.api.Close;
-import org.eobjects.analyzer.beans.api.Configured;
-import org.eobjects.analyzer.beans.api.Description;
-import org.eobjects.analyzer.beans.api.Initialize;
-import org.eobjects.analyzer.beans.api.OutputColumns;
-import org.eobjects.analyzer.beans.api.Transformer;
-import org.eobjects.analyzer.beans.api.TransformerBean;
-import org.eobjects.analyzer.data.InputColumn;
-import org.eobjects.analyzer.data.InputRow;
-import org.eobjects.analyzer.util.StringUtils;
 
-@TransformerBean("ElasticSearch full text search")
+@Named("ElasticSearch full text search")
 @Description("Performs a full text search for every record into an ElasticSearch search index.")
 @Categorized(ElasticSearchCategory.class)
-public class ElasticSearchFullSearchTransformer implements Transformer<Object> {
+public class ElasticSearchFullSearchTransformer implements Transformer {
 
     @Configured
     InputColumn<String> searchInput;

@@ -1,6 +1,6 @@
 package org.eobjects.datacleaner.extension.test;
 
-import org.eobjects.datacleaner.Main;
+import org.datacleaner.Main;
 
 public class TestMain {
 

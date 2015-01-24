@@ -19,7 +19,8 @@
  */
 package org.eobjects.datacleaner.extension.elasticsearch;
 
-import org.eobjects.analyzer.beans.categories.AbstractComponentCategory;
+import org.datacleaner.components.categories.AbstractComponentCategory;
+
 
 /**
  * Component category for elastic search extension

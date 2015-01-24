@@ -19,31 +19,32 @@
  */
 package org.eobjects.datacleaner.extension.elasticsearch;
 
+import javax.inject.Named;
+
+import org.datacleaner.api.Categorized;
+import org.datacleaner.api.Close;
+import org.datacleaner.api.Configured;
+import org.datacleaner.api.Description;
+import org.datacleaner.api.Initialize;
+import org.datacleaner.api.InputColumn;
+import org.datacleaner.api.InputRow;
+import org.datacleaner.api.OutputColumns;
+import org.datacleaner.api.Transformer;
+import org.datacleaner.components.convert.ConvertToStringTransformer;
+import org.datacleaner.util.StringUtils;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.get.GetField;
-import org.eobjects.analyzer.beans.api.Categorized;
-import org.eobjects.analyzer.beans.api.Close;
-import org.eobjects.analyzer.beans.api.Configured;
-import org.eobjects.analyzer.beans.api.Description;
-import org.eobjects.analyzer.beans.api.Initialize;
-import org.eobjects.analyzer.beans.api.OutputColumns;
-import org.eobjects.analyzer.beans.api.Transformer;
-import org.eobjects.analyzer.beans.api.TransformerBean;
-import org.eobjects.analyzer.beans.convert.ConvertToStringTransformer;
-import org.eobjects.analyzer.data.InputColumn;
-import org.eobjects.analyzer.data.InputRow;
-import org.eobjects.analyzer.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@TransformerBean("ElasticSearch document ID lookup")
+@Named("ElasticSearch document ID lookup")
 @Description("Look up documents in ElasticSearch by providing a document ID")
 @Categorized(ElasticSearchCategory.class)
-public class ElasticSearchDocumentIdLookupTransformer implements Transformer<String> {
+public class ElasticSearchDocumentIdLookupTransformer implements Transformer {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchDocumentIdLookupTransformer.class);
 
@@ -80,7 +81,7 @@ public class ElasticSearchDocumentIdLookupTransformer implements Transformer<Str
 
     @Override
     public OutputColumns getOutputColumns() {
-        return new OutputColumns(fields);
+        return new OutputColumns(String.class, fields);
     }
 
     @Override

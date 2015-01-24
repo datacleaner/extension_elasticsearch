@@ -23,11 +23,11 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
+import org.datacleaner.api.InputColumn;
+import org.datacleaner.api.OutputColumns;
+import org.datacleaner.data.MockInputColumn;
+import org.datacleaner.data.MockInputRow;
 import org.elasticsearch.common.collect.MapBuilder;
-import org.eobjects.analyzer.beans.api.OutputColumns;
-import org.eobjects.analyzer.data.InputColumn;
-import org.eobjects.analyzer.data.MockInputColumn;
-import org.eobjects.analyzer.data.MockInputRow;
 
 public class ElasticSearchDocumentIdLookupTransformerTest extends TestCase {
 
