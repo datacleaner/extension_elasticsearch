@@ -31,6 +31,7 @@ import org.datacleaner.api.Description;
 import org.datacleaner.api.Initialize;
 import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.InputRow;
+import org.datacleaner.api.MappedProperty;
 import org.datacleaner.api.NumberProperty;
 import org.datacleaner.beans.writers.WriteDataResult;
 import org.datacleaner.beans.writers.WriteDataResultImpl;
@@ -44,8 +45,18 @@ import org.slf4j.LoggerFactory;
 @Description("Consumes records and indexes them in a ElasticSearch search index.")
 @Categorized(superCategory = WriteSuperCategory.class)
 public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
+    
+    public static final String PROPERTY_INPUT_COLUMNS = "Values";
+    public static final String PROPERTY_FIELD_NAMES = "Fields";
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchIndexAnalyzer.class);
+    
+    @Configured(PROPERTY_INPUT_COLUMNS)
+    InputColumn<?>[] values;
+    
+    @Configured(PROPERTY_FIELD_NAMES)
+    @MappedProperty(PROPERTY_INPUT_COLUMNS)
+    String[] fields;
 
     @Configured(required = false)
     String[] clusterHosts = new String[0];
@@ -61,12 +72,6 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
 
     @Configured
     InputColumn<?> idColumn;
-
-    @Configured
-    String[] fields;
-
-    @Configured
-    InputColumn<?>[] values;
 
     @Configured
     boolean createIndex = false;
