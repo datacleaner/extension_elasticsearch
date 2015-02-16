@@ -32,6 +32,7 @@ import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.InputRow;
 import org.datacleaner.api.OutputColumns;
 import org.datacleaner.api.Transformer;
+import org.datacleaner.components.categories.ImproveSuperCategory;
 import org.datacleaner.util.StringUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -44,7 +45,7 @@ import org.elasticsearch.search.SearchHits;
 
 @Named("ElasticSearch full text search")
 @Description("Performs a full text search for every record into an ElasticSearch search index.")
-@Categorized(ElasticSearchCategory.class)
+@Categorized(superCategory = ImproveSuperCategory.class, value = ElasticSearchCategory.class)
 public class ElasticSearchFullSearchTransformer implements Transformer {
 
     @Configured

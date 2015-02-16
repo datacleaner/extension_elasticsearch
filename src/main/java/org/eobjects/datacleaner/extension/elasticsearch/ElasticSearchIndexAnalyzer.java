@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 
 @Named("ElasticSearch indexer")
 @Description("Consumes records and indexes them in a ElasticSearch search index.")
-@Categorized(superCategory = WriteSuperCategory.class, value = ElasticSearchCategory.class)
+@Categorized(superCategory = WriteSuperCategory.class)
 public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchIndexAnalyzer.class);
