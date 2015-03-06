@@ -17,7 +17,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.eobjects.datacleaner.extension.elasticsearch;
+package org.datacleaner.extension.elasticsearch;
 
 import java.io.File;
 import java.util.List;
@@ -34,6 +34,7 @@ import org.datacleaner.connection.CsvDatastore;
 import org.datacleaner.connection.DatastoreCatalogImpl;
 import org.datacleaner.descriptors.Descriptors;
 import org.datacleaner.descriptors.SimpleDescriptorProvider;
+import org.datacleaner.extension.elasticsearch.ElasticSearchIndexAnalyzer;
 import org.datacleaner.job.AnalysisJob;
 import org.datacleaner.job.JaxbJobReader;
 import org.datacleaner.job.concurrent.MultiThreadedTaskRunner;

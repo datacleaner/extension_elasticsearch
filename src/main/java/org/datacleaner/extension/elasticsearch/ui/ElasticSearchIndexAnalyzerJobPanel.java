@@ -17,7 +17,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.eobjects.datacleaner.extension.elasticsearch.ui;
+package org.datacleaner.extension.elasticsearch.ui;
 
 import org.datacleaner.api.InputColumn;
 import org.datacleaner.descriptors.ConfiguredPropertyDescriptor;

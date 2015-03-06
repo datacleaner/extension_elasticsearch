@@ -17,10 +17,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.eobjects.datacleaner.extension.elasticsearch;
+package org.datacleaner.extension.elasticsearch;
 
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.Arrays;
 
 import junit.framework.TestCase;
 
@@ -28,9 +27,10 @@ import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.OutputColumns;
 import org.datacleaner.data.MockInputColumn;
 import org.datacleaner.data.MockInputRow;
+import org.datacleaner.extension.elasticsearch.ElasticSearchDocumentIdLookupTransformer;
 import org.elasticsearch.common.collect.MapBuilder;
 
-public class ElasticSearchFullSearchTransformerTest extends TestCase {
+public class ElasticSearchDocumentIdLookupTransformerTest extends TestCase {
 
     private ElasticSearchTestServer _server;
 
@@ -50,15 +50,16 @@ public class ElasticSearchFullSearchTransformerTest extends TestCase {
     public void testTransform() throws Exception {
         final InputColumn<String> col1 = new MockInputColumn<String>("col1");
 
-        final ElasticSearchFullSearchTransformer transformer = new ElasticSearchFullSearchTransformer();
-        transformer.searchInput = col1;
+        final ElasticSearchDocumentIdLookupTransformer transformer = new ElasticSearchDocumentIdLookupTransformer();
+        transformer.documentId = col1;
         transformer.documentType = ElasticSearchTestServer.DOCUMENT_TYPE;
         transformer.indexName = ElasticSearchTestServer.INDEX_NAME;
         transformer.clusterName = ElasticSearchTestServer.CLUSTER_NAME;
+        transformer.fields = new String[] { "city", "country" };
         transformer.clusterHosts = new String[] { "localhost:" + ElasticSearchTestServer.TRANSPORT_PORT };
 
         OutputColumns out = transformer.getOutputColumns();
-        assertEquals("OutputColumns[Document ID, Document]", out.toString());
+        assertEquals("OutputColumns[city, country]", out.toString());
 
         try {
             transformer.init();
@@ -74,18 +75,15 @@ public class ElasticSearchFullSearchTransformerTest extends TestCase {
 
             Object[] output;
             
-            output = transformer.transform(new MockInputRow().put(col1, "Copenhagen"));
-            assertEquals("cph", String.valueOf(output[0]));
+            output = transformer.transform(new MockInputRow().put(col1, "cph"));
+            assertEquals("[Copenhagen, Denmark]", Arrays.toString(output));
             
-            @SuppressWarnings("unchecked")
-            Map<String,?> map = (Map<String, ?>) output[1];
-            assertNotNull(map);
-            assertEquals("{city=Copenhagen, country=Denmark}", new TreeMap<>(map).toString());
+            output = transformer.transform(new MockInputRow().put(col1, "foobar"));
+            assertEquals("[null, null]", Arrays.toString(output));
             
-            output = transformer.transform(new MockInputRow().put(col1, "n/a"));
-            assertEquals("null", String.valueOf(output[0]));
-            assertEquals("null", String.valueOf(output[1]));
-            
+            output = transformer.transform(new MockInputRow().put(col1, "del"));
+            assertEquals("[Delhi, India]", Arrays.toString(output));
+
         } catch (Exception e) {
             e.printStackTrace();
             throw e;

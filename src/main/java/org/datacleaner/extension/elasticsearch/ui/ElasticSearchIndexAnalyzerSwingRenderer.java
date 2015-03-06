@@ -17,19 +17,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.eobjects.datacleaner.extension.elasticsearch.ui;
+package org.datacleaner.extension.elasticsearch.ui;
 
 import javax.inject.Inject;
 
 import org.datacleaner.api.Renderer;
 import org.datacleaner.api.RendererBean;
 import org.datacleaner.api.RendererPrecedence;
+import org.datacleaner.extension.elasticsearch.ElasticSearchIndexAnalyzer;
 import org.datacleaner.guice.DCModule;
 import org.datacleaner.job.builder.AnalyzerComponentBuilder;
 import org.datacleaner.panels.AnalyzerComponentBuilderPresenter;
 import org.datacleaner.panels.ComponentBuilderPresenterRenderingFormat;
 import org.datacleaner.widgets.properties.PropertyWidgetFactory;
-import org.eobjects.datacleaner.extension.elasticsearch.ElasticSearchIndexAnalyzer;
 
 @RendererBean(ComponentBuilderPresenterRenderingFormat.class)
 public class ElasticSearchIndexAnalyzerSwingRenderer implements

@@ -1,4 +1,4 @@
-package org.eobjects.datacleaner.extension.test;
+package org.datacleaner.extension.test;
 
 import org.datacleaner.Main;
 

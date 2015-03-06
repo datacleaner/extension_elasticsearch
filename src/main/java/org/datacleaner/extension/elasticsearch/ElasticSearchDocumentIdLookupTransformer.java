@@ -17,9 +17,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.eobjects.datacleaner.extension.elasticsearch;
-
-import java.util.Map;
+package org.datacleaner.extension.elasticsearch;
 
 import javax.inject.Named;
 
@@ -33,23 +31,26 @@ import org.datacleaner.api.InputRow;
 import org.datacleaner.api.OutputColumns;
 import org.datacleaner.api.Transformer;
 import org.datacleaner.components.categories.ImproveSuperCategory;
+import org.datacleaner.components.convert.ConvertToStringTransformer;
 import org.datacleaner.util.StringUtils;
-import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.action.ActionFuture;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetRequestBuilder;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.index.get.GetField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Named("ElasticSearch full text search")
-@Description("Performs a full text search for every record into an ElasticSearch search index.")
+@Named("ElasticSearch document ID lookup")
+@Description("Look up documents in ElasticSearch by providing a document ID")
 @Categorized(superCategory = ImproveSuperCategory.class, value = ElasticSearchCategory.class)
-public class ElasticSearchFullSearchTransformer implements Transformer {
+public class ElasticSearchDocumentIdLookupTransformer implements Transformer {
+
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearchDocumentIdLookupTransformer.class);
 
     @Configured
-    InputColumn<String> searchInput;
+    InputColumn<?> documentId;
 
     @Configured
     String[] clusterHosts = { "localhost:9300" };
@@ -63,11 +64,9 @@ public class ElasticSearchFullSearchTransformer implements Transformer {
     @Configured
     String documentType;
 
-    @Configured(required = false)
-    String analyzerName;
-
-    @Configured(required = false)
-    String searchFieldName;
+    @Configured
+    @Description("Fields to return")
+    String[] fields;
 
     private ElasticSearchClientFactory _clientFactory;
 
@@ -83,45 +82,38 @@ public class ElasticSearchFullSearchTransformer implements Transformer {
 
     @Override
     public OutputColumns getOutputColumns() {
-        String[] names = new String[] { "Document ID", "Document" };
-        Class<?>[] types = new Class[] { String.class, Map.class };
-        return new OutputColumns(names, types);
+        return new OutputColumns(String.class, fields);
     }
 
     @Override
-    public Object[] transform(InputRow row) {
-        final Object[] result = new Object[2];
+    public String[] transform(InputRow row) {
+        final String[] result = new String[fields.length];
 
-        final String input = row.getValue(searchInput);
-        if (StringUtils.isNullOrEmpty(input)) {
+        final String id = ConvertToStringTransformer.transformValue(row.getValue(documentId));
+        if (StringUtils.isNullOrEmpty(id)) {
             return result;
         }
 
         final Client client = _clientFactory.get();
-        MatchQueryBuilder query;
-        if (StringUtils.isNullOrEmpty(searchFieldName)) {
-            query = QueryBuilders.matchQuery("_all", input);
-        } else {
-            query = QueryBuilders.matchQuery(searchFieldName, input);
-        }
+        final GetRequest request = new GetRequestBuilder(client).setId(id).setType(documentType).setFields(fields)
+                .setIndex(indexName).setOperationThreaded(false).request();
+        final ActionFuture<GetResponse> getFuture = client.get(request);
+        final GetResponse response = getFuture.actionGet();
 
-        if (!StringUtils.isNullOrEmpty(analyzerName)) {
-            query = query.analyzer(analyzerName);
-        }
-
-        final SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(client).setIndices(indexName)
-                .setTypes(documentType).setQuery(query).setSize(1).setSearchType(SearchType.QUERY_AND_FETCH)
-                .setExplain(true);
-
-        final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
-        final SearchHits hits = searchResponse.getHits();
-        if (hits.getTotalHits() == 0) {
+        if (!response.isExists()) {
             return result;
         }
 
-        final SearchHit hit = hits.getAt(0);
-        result[0] = hit.getId();
-        result[1] = hit.sourceAsMap();
+        for (int i = 0; i < fields.length; i++) {
+            final String field = fields[i];
+            final GetField valueGetter = response.getField(field);
+            if (valueGetter == null) {
+                logger.info("Document with id '{}' did not have the field '{}'", id, field);
+            } else {
+                final Object value = valueGetter.getValue();
+                result[i] = ConvertToStringTransformer.transformValue(value);
+            }
+        }
 
         return result;
     }

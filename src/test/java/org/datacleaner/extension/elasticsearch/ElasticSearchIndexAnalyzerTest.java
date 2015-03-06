@@ -17,13 +17,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.eobjects.datacleaner.extension.elasticsearch;
+package org.datacleaner.extension.elasticsearch;
 
 import junit.framework.TestCase;
 
 import org.datacleaner.api.InputColumn;
 import org.datacleaner.data.MockInputColumn;
 import org.datacleaner.data.MockInputRow;
+import org.datacleaner.extension.elasticsearch.ElasticSearchIndexAnalyzer;
 
 public class ElasticSearchIndexAnalyzerTest extends TestCase {
 
