@@ -17,7 +17,27 @@
 		<developerConnection>scm:git:https://github.com/datacleaner/extension_elasticsearch.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
-
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.9.1</version>
+				<executions>
+					<execution>
+						<id>attach-javadoc</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<skip>false</skip>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
 	<dependencies>
 		<dependency>
 			<!-- Include DataCleaner as a provided dependency -->
