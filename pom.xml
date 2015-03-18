@@ -3,10 +3,10 @@
 	<parent>
 		<groupId>org.eobjects.datacleaner</groupId>
 		<artifactId>DataCleaner-extensions</artifactId>
-		<version>3.7-RC4</version>
+		<version>3.7.2</version>
 	</parent>
 	<properties>
-		<elasticsearch.version>1.3.1</elasticsearch.version>
+		<elasticsearch.version>1.3.2</elasticsearch.version>
 	</properties>
 	<groupId>org.eobjects.datacleaner.extensions</groupId>
 	<artifactId>DataCleaner-elasticsearch</artifactId>
@@ -18,7 +18,7 @@
 		<url>https://github.com/datacleaner/extension_elasticsearch</url>
 		<connection>scm:git:https://github.com/datacleaner/extension_elasticsearch.git</connection>
 		<developerConnection>scm:git:https://github.com/datacleaner/extension_elasticsearch.git</developerConnection>
-	  <tag>1.5</tag>
+	  <tag>1.x</tag>
   </scm>
 
 	<build>
@@ -49,7 +49,7 @@
 			<!-- Include DataCleaner as a provided dependency -->
 			<groupId>org.eobjects.datacleaner</groupId>
 			<artifactId>DataCleaner-desktop</artifactId>
-			<version>3.7-RC4</version>
+			<version>3.7.2</version>
 			<scope>provided</scope>
 		</dependency>
 
