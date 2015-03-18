@@ -85,7 +85,7 @@ public class ElasticSearchClientFactory extends LazyRef<Client> implements Close
 
             return client;
         } else {
-            
+
             _node = NodeBuilder.nodeBuilder().client(true).settings(_settings).node();
             return _node.client();
         }
@@ -95,11 +95,12 @@ public class ElasticSearchClientFactory extends LazyRef<Client> implements Close
     public void close() {
         if (isFetched()) {
             final Client client = get();
-            client.close();
-            if (_node != null) {
-                _node.close();
+            if (client != null) {
+                client.close();
+                if (_node != null) {
+                    _node.close();
+                }
             }
-
         }
     }
 }
