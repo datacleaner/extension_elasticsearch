@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.eobjects.datacleaner</groupId>
@@ -11,7 +10,7 @@
 	</properties>
 	<groupId>org.eobjects.datacleaner.extensions</groupId>
 	<artifactId>DataCleaner-elasticsearch</artifactId>
-	<version>1.5-SNAPSHOT</version>
+	<version>1.5</version>
 	<packaging>jar</packaging>
 	<name>DataCleaner - 'elasticsearch' extension</name>
 
@@ -19,7 +18,7 @@
 		<url>https://github.com/datacleaner/extension_elasticsearch</url>
 		<connection>scm:git:https://github.com/datacleaner/extension_elasticsearch.git</connection>
 		<developerConnection>scm:git:https://github.com/datacleaner/extension_elasticsearch.git</developerConnection>
-		<tag>1.x</tag>
+		<tag>DataCleaner-elasticsearch-1.5</tag>
 	</scm>
 
 	<build>
