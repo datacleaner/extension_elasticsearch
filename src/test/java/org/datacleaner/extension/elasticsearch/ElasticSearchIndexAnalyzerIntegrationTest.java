@@ -28,13 +28,13 @@ import org.apache.metamodel.util.FileResource;
 import org.apache.metamodel.util.Resource;
 import org.datacleaner.beans.writers.WriteDataResult;
 import org.datacleaner.components.maxrows.MaxRowsFilter;
-import org.datacleaner.configuration.AnalyzerBeansConfiguration;
-import org.datacleaner.configuration.AnalyzerBeansConfigurationImpl;
+import org.datacleaner.configuration.DataCleanerConfiguration;
+import org.datacleaner.configuration.DataCleanerConfigurationImpl;
+import org.datacleaner.configuration.DataCleanerEnvironment;
+import org.datacleaner.configuration.DataCleanerEnvironmentImpl;
 import org.datacleaner.connection.CsvDatastore;
-import org.datacleaner.connection.DatastoreCatalogImpl;
 import org.datacleaner.descriptors.Descriptors;
 import org.datacleaner.descriptors.SimpleDescriptorProvider;
-import org.datacleaner.extension.elasticsearch.ElasticSearchIndexAnalyzer;
 import org.datacleaner.job.AnalysisJob;
 import org.datacleaner.job.JaxbJobReader;
 import org.datacleaner.job.concurrent.MultiThreadedTaskRunner;
@@ -74,8 +74,10 @@ public class ElasticSearchIndexAnalyzerIntegrationTest extends TestCase {
         descriptorProvider.addFilterBeanDescriptor(Descriptors.ofFilter(MaxRowsFilter.class));
 
         final TaskRunner taskRunner = new MultiThreadedTaskRunner(10);
-        final AnalyzerBeansConfiguration conf = new AnalyzerBeansConfigurationImpl().replace(taskRunner)
-                .replace(new DatastoreCatalogImpl(ds)).replace(descriptorProvider);
+        final DataCleanerEnvironment environment = new DataCleanerEnvironmentImpl().withTaskRunner(taskRunner)
+                .withDescriptorProvider(descriptorProvider);
+        final DataCleanerConfiguration conf = new DataCleanerConfigurationImpl().withEnvironment(environment)
+                .withDatastores(ds);
 
         final AnalysisJob job = new JaxbJobReader(conf).create(new File("src/test/resources/es_test.analysis.xml"))
                 .toAnalysisJob();
