@@ -19,6 +19,7 @@
  */
 package org.datacleaner.extension.elasticsearch;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Named;
@@ -38,6 +39,8 @@ import org.datacleaner.beans.writers.WriteDataResultImpl;
 import org.datacleaner.components.categories.WriteSuperCategory;
 import org.datacleaner.components.convert.ConvertToStringTransformer;
 import org.datacleaner.util.WriteBuffer;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,17 +83,31 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
     @NumberProperty(negative = false, zero = false)
     int bulkIndexSize = 2000;
 
+    @Configured(required = false)
+    boolean automaticDateDetection = false;
+    
     private ElasticSearchClientFactory _clientFactory;
     private AtomicInteger _counter;
     private WriteBuffer _writeBuffer;
 
     @Initialize
-    public void init() {
+    public void init() throws IOException {
         _clientFactory = new ElasticSearchClientFactory(clusterHosts, clusterName);
 
         _counter = new AtomicInteger(0);
         _writeBuffer = new WriteBuffer(bulkIndexSize, new ElasticSearchIndexFlushAction(_clientFactory, fields,
                 indexName, documentType));
+        
+    	if (!_clientFactory.get().admin().indices().prepareExists(indexName).execute().actionGet().isExists())
+    		_clientFactory.get().admin().indices().prepareCreate(indexName).execute().actionGet();
+
+        XContentBuilder builder = XContentFactory.jsonBuilder().
+                startObject().
+                  startObject(documentType).
+                    field("date_detection", automaticDateDetection).
+                  endObject().
+                endObject();
+        _clientFactory.get().admin().indices().preparePutMapping(indexName).setType(documentType).setSource(builder).execute().actionGet();
     }
 
     @Close
