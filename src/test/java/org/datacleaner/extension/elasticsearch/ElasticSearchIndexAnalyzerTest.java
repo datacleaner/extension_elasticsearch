@@ -22,6 +22,7 @@ package org.datacleaner.extension.elasticsearch;
 import junit.framework.TestCase;
 
 import org.datacleaner.api.InputColumn;
+import org.datacleaner.connection.ElasticSearchDatastore;
 import org.datacleaner.data.MockInputColumn;
 import org.datacleaner.data.MockInputRow;
 import org.datacleaner.extension.elasticsearch.ElasticSearchIndexAnalyzer;
@@ -29,12 +30,16 @@ import org.datacleaner.extension.elasticsearch.ElasticSearchIndexAnalyzer;
 public class ElasticSearchIndexAnalyzerTest extends TestCase {
 
     private ElasticSearchTestServer _server;
+    private ElasticSearchDatastore _elasticSearchDatastore;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         _server = new ElasticSearchTestServer();
         _server.startup();
+        _elasticSearchDatastore = new ElasticSearchDatastore(null, "localhost",
+                Integer.parseInt(ElasticSearchTestServer.TRANSPORT_PORT), ElasticSearchTestServer.CLUSTER_NAME,
+                ElasticSearchTestServer.INDEX_NAME);
     }
 
     @Override
@@ -53,9 +58,7 @@ public class ElasticSearchIndexAnalyzerTest extends TestCase {
         analyzer.fields = new String[] { "col1", "col2" };
         analyzer.values = new InputColumn[] { col1, col2 };
         analyzer.documentType = ElasticSearchTestServer.DOCUMENT_TYPE;
-        analyzer.indexName = ElasticSearchTestServer.INDEX_NAME;
-        analyzer.clusterName = ElasticSearchTestServer.CLUSTER_NAME;
-        analyzer.clusterHosts = new String[] { "localhost:" + ElasticSearchTestServer.TRANSPORT_PORT };
+        analyzer.elasticsearchDatastore = _elasticSearchDatastore;
 
         try {
             analyzer.init();

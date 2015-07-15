@@ -33,6 +33,7 @@ import org.datacleaner.configuration.DataCleanerConfigurationImpl;
 import org.datacleaner.configuration.DataCleanerEnvironment;
 import org.datacleaner.configuration.DataCleanerEnvironmentImpl;
 import org.datacleaner.connection.CsvDatastore;
+import org.datacleaner.connection.ElasticSearchDatastore;
 import org.datacleaner.descriptors.Descriptors;
 import org.datacleaner.descriptors.SimpleDescriptorProvider;
 import org.datacleaner.job.AnalysisJob;
@@ -68,7 +69,10 @@ public class ElasticSearchIndexAnalyzerIntegrationTest extends TestCase {
         final String filename = "AddressAccess.csv";
         final CsvDatastore ds = new CsvDatastore("AddressAccess.csv", resource, filename, '"', ';', '\\', "UTF8", true,
                 1);
-
+        final ElasticSearchDatastore elasticSearchDatastore = new ElasticSearchDatastore(
+                ElasticSearchTestServer.DATASTORE_NAME, "localhost",
+                Integer.parseInt(ElasticSearchTestServer.TRANSPORT_PORT), ElasticSearchTestServer.CLUSTER_NAME,
+                ElasticSearchTestServer.INDEX_NAME);
         final SimpleDescriptorProvider descriptorProvider = new SimpleDescriptorProvider();
         descriptorProvider.addAnalyzerBeanDescriptor(Descriptors.ofAnalyzer(ElasticSearchIndexAnalyzer.class));
         descriptorProvider.addFilterBeanDescriptor(Descriptors.ofFilter(MaxRowsFilter.class));
@@ -77,7 +81,7 @@ public class ElasticSearchIndexAnalyzerIntegrationTest extends TestCase {
         final DataCleanerEnvironment environment = new DataCleanerEnvironmentImpl().withTaskRunner(taskRunner)
                 .withDescriptorProvider(descriptorProvider);
         final DataCleanerConfiguration conf = new DataCleanerConfigurationImpl().withEnvironment(environment)
-                .withDatastores(ds);
+                .withDatastores(ds, elasticSearchDatastore);
 
         final AnalysisJob job = new JaxbJobReader(conf).create(new File("src/test/resources/es_test.analysis.xml"))
                 .toAnalysisJob();

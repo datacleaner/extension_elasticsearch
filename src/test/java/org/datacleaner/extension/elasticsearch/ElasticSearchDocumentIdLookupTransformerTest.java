@@ -25,20 +25,24 @@ import junit.framework.TestCase;
 
 import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.OutputColumns;
+import org.datacleaner.connection.ElasticSearchDatastore;
 import org.datacleaner.data.MockInputColumn;
 import org.datacleaner.data.MockInputRow;
-import org.datacleaner.extension.elasticsearch.ElasticSearchDocumentIdLookupTransformer;
 import org.elasticsearch.common.collect.MapBuilder;
 
 public class ElasticSearchDocumentIdLookupTransformerTest extends TestCase {
 
     private ElasticSearchTestServer _server;
+    private ElasticSearchDatastore _elasticSearchDatastore;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         _server = new ElasticSearchTestServer();
         _server.startup();
+        _elasticSearchDatastore = new ElasticSearchDatastore(ElasticSearchTestServer.DATASTORE_NAME, "localhost",
+                Integer.parseInt(ElasticSearchTestServer.TRANSPORT_PORT), ElasticSearchTestServer.CLUSTER_NAME,
+                ElasticSearchTestServer.INDEX_NAME);
     }
 
     @Override
@@ -49,15 +53,11 @@ public class ElasticSearchDocumentIdLookupTransformerTest extends TestCase {
 
     public void testTransform() throws Exception {
         final InputColumn<String> col1 = new MockInputColumn<String>("col1");
-
         final ElasticSearchDocumentIdLookupTransformer transformer = new ElasticSearchDocumentIdLookupTransformer();
         transformer.documentId = col1;
         transformer.documentType = ElasticSearchTestServer.DOCUMENT_TYPE;
-        transformer.indexName = ElasticSearchTestServer.INDEX_NAME;
-        transformer.clusterName = ElasticSearchTestServer.CLUSTER_NAME;
         transformer.fields = new String[] { "city", "country" };
-        transformer.clusterHosts = new String[] { "localhost:" + ElasticSearchTestServer.TRANSPORT_PORT };
-
+        transformer.elasticsearchDatastore = _elasticSearchDatastore;
         OutputColumns out = transformer.getOutputColumns();
         assertEquals("OutputColumns[city, country]", out.toString());
 
@@ -74,13 +74,13 @@ public class ElasticSearchDocumentIdLookupTransformerTest extends TestCase {
             _server.addDocument("del", MapBuilder.newMapBuilder().put("city", "Delhi").put("country", "India").map());
 
             Object[] output;
-            
+
             output = transformer.transform(new MockInputRow().put(col1, "cph"));
             assertEquals("[Copenhagen, Denmark]", Arrays.toString(output));
-            
+
             output = transformer.transform(new MockInputRow().put(col1, "foobar"));
             assertEquals("[null, null]", Arrays.toString(output));
-            
+
             output = transformer.transform(new MockInputRow().put(col1, "del"));
             assertEquals("[Delhi, India]", Arrays.toString(output));
 
@@ -88,7 +88,7 @@ public class ElasticSearchDocumentIdLookupTransformerTest extends TestCase {
             e.printStackTrace();
             throw e;
         }
-        
+
         transformer.close();
     }
 }

@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Named;
 
+import org.apache.metamodel.elasticsearch.ElasticSearchDataContext;
 import org.datacleaner.api.Analyzer;
 import org.datacleaner.api.Categorized;
 import org.datacleaner.api.Close;
@@ -38,7 +39,9 @@ import org.datacleaner.beans.writers.WriteDataResult;
 import org.datacleaner.beans.writers.WriteDataResultImpl;
 import org.datacleaner.components.categories.WriteSuperCategory;
 import org.datacleaner.components.convert.ConvertToStringTransformer;
+import org.datacleaner.connection.ElasticSearchDatastore;
 import org.datacleaner.util.WriteBuffer;
+import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.slf4j.Logger;
@@ -48,27 +51,18 @@ import org.slf4j.LoggerFactory;
 @Description("Consumes records and indexes them in a ElasticSearch search index.")
 @Categorized(superCategory = WriteSuperCategory.class)
 public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
-    
+
     public static final String PROPERTY_INPUT_COLUMNS = "Values";
     public static final String PROPERTY_FIELD_NAMES = "Fields";
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchIndexAnalyzer.class);
-    
+
     @Configured(PROPERTY_INPUT_COLUMNS)
     InputColumn<?>[] values;
-    
+
     @Configured(PROPERTY_FIELD_NAMES)
     @MappedProperty(PROPERTY_INPUT_COLUMNS)
     String[] fields;
-
-    @Configured(required = false)
-    String[] clusterHosts = new String[0];
-
-    @Configured
-    String clusterName = "elasticsearch";
-
-    @Configured
-    String indexName;
 
     @Configured
     String documentType;
@@ -85,34 +79,38 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
 
     @Configured(required = false)
     boolean automaticDateDetection = false;
-    
-    private ElasticSearchClientFactory _clientFactory;
+
+    @Configured("ElasticSearch datastore")
+    ElasticSearchDatastore elasticsearchDatastore;
+
+    private ElasticSearchDataContext _dataContext;
+
     private AtomicInteger _counter;
     private WriteBuffer _writeBuffer;
 
     @Initialize
     public void init() throws IOException {
-        _clientFactory = new ElasticSearchClientFactory(clusterHosts, clusterName);
 
+        _dataContext = (ElasticSearchDataContext) elasticsearchDatastore.openConnection().getDataContext();
+        final Client client = _dataContext.getElasticSearchClient();
         _counter = new AtomicInteger(0);
-        _writeBuffer = new WriteBuffer(bulkIndexSize, new ElasticSearchIndexFlushAction(_clientFactory, fields,
-                indexName, documentType));
-        
-    	if (!_clientFactory.get().admin().indices().prepareExists(indexName).execute().actionGet().isExists())
-    		_clientFactory.get().admin().indices().prepareCreate(indexName).execute().actionGet();
+        _writeBuffer = new WriteBuffer(bulkIndexSize, new ElasticSearchIndexFlushAction(elasticsearchDatastore, fields,
+                documentType));
 
-        XContentBuilder builder = XContentFactory.jsonBuilder().
-                startObject().
-                  startObject(documentType).
-                    field("date_detection", automaticDateDetection).
-                  endObject().
-                endObject();
-        _clientFactory.get().admin().indices().preparePutMapping(indexName).setType(documentType).setSource(builder).execute().actionGet();
+        final String indexName = elasticsearchDatastore.getIndexName();
+
+        if (!client.admin().indices().prepareExists(indexName).execute().actionGet().isExists())
+            client.admin().indices().prepareCreate(indexName).execute().actionGet();
+
+        XContentBuilder builder = XContentFactory.jsonBuilder().startObject().startObject(documentType)
+                .field("date_detection", automaticDateDetection).endObject().endObject();
+        client.admin().indices().preparePutMapping(indexName).setType(documentType).setSource(builder).execute()
+                .actionGet();
     }
 
     @Close
     public void close() {
-        _clientFactory.close();
+        _dataContext.getElasticSearchClient().close();
     }
 
     @Override
@@ -145,14 +143,6 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
         this.bulkIndexSize = bulkIndexSize;
     }
 
-    public void setClusterHosts(String[] clusterHosts) {
-        this.clusterHosts = clusterHosts;
-    }
-
-    public void setClusterName(String clusterName) {
-        this.clusterName = clusterName;
-    }
-
     public void setCreateIndex(boolean createIndex) {
         this.createIndex = createIndex;
     }
@@ -167,10 +157,6 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
 
     public void setIdColumn(InputColumn<?> idColumn) {
         this.idColumn = idColumn;
-    }
-
-    public void setIndexName(String indexName) {
-        this.indexName = indexName;
     }
 
     public void setValues(InputColumn<?>[] values) {

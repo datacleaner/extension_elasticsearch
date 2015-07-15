@@ -31,6 +31,10 @@ import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
+/**
+ * Use {@link ElasticSearchDatastore} instead.
+ */
+@Deprecated
 public class ElasticSearchClientFactory extends LazyRef<Client> implements Closeable {
 
     private final TransportAddress[] _transportAddresses;
@@ -85,7 +89,7 @@ public class ElasticSearchClientFactory extends LazyRef<Client> implements Close
 
             return client;
         } else {
-            
+
             _node = NodeBuilder.nodeBuilder().client(true).settings(_settings).node();
             return _node.client();
         }

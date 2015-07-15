@@ -26,6 +26,7 @@ import junit.framework.TestCase;
 
 import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.OutputColumns;
+import org.datacleaner.connection.ElasticSearchDatastore;
 import org.datacleaner.data.MockInputColumn;
 import org.datacleaner.data.MockInputRow;
 import org.datacleaner.extension.elasticsearch.ElasticSearchFullSearchTransformer;
@@ -34,12 +35,16 @@ import org.elasticsearch.common.collect.MapBuilder;
 public class ElasticSearchFullSearchTransformerTest extends TestCase {
 
     private ElasticSearchTestServer _server;
+    private ElasticSearchDatastore _elasticSearchDatastore;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         _server = new ElasticSearchTestServer();
         _server.startup();
+        _elasticSearchDatastore = new ElasticSearchDatastore(ElasticSearchTestServer.DATASTORE_NAME, "localhost",
+                Integer.parseInt(ElasticSearchTestServer.TRANSPORT_PORT), ElasticSearchTestServer.CLUSTER_NAME,
+                ElasticSearchTestServer.INDEX_NAME);
     }
 
     @Override
@@ -54,9 +59,7 @@ public class ElasticSearchFullSearchTransformerTest extends TestCase {
         final ElasticSearchFullSearchTransformer transformer = new ElasticSearchFullSearchTransformer();
         transformer.searchInput = col1;
         transformer.documentType = ElasticSearchTestServer.DOCUMENT_TYPE;
-        transformer.indexName = ElasticSearchTestServer.INDEX_NAME;
-        transformer.clusterName = ElasticSearchTestServer.CLUSTER_NAME;
-        transformer.clusterHosts = new String[] { "localhost:" + ElasticSearchTestServer.TRANSPORT_PORT };
+        transformer.elasticsearchDatastore = _elasticSearchDatastore;
 
         OutputColumns out = transformer.getOutputColumns();
         assertEquals("OutputColumns[Document ID, Document]", out.toString());
@@ -74,24 +77,24 @@ public class ElasticSearchFullSearchTransformerTest extends TestCase {
             _server.addDocument("del", MapBuilder.newMapBuilder().put("city", "Delhi").put("country", "India").map());
 
             Object[] output;
-            
+
             output = transformer.transform(new MockInputRow().put(col1, "Copenhagen"));
             assertEquals("cph", String.valueOf(output[0]));
-            
+
             @SuppressWarnings("unchecked")
-            Map<String,?> map = (Map<String, ?>) output[1];
+            Map<String, ?> map = (Map<String, ?>) output[1];
             assertNotNull(map);
             assertEquals("{city=Copenhagen, country=Denmark}", new TreeMap<>(map).toString());
-            
+
             output = transformer.transform(new MockInputRow().put(col1, "n/a"));
             assertEquals("null", String.valueOf(output[0]));
             assertEquals("null", String.valueOf(output[1]));
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
         }
-        
+
         transformer.close();
     }
 }
