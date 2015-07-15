@@ -23,10 +23,8 @@ import javax.inject.Named;
 
 import org.apache.metamodel.elasticsearch.ElasticSearchDataContext;
 import org.datacleaner.api.Categorized;
-import org.datacleaner.api.Close;
 import org.datacleaner.api.Configured;
 import org.datacleaner.api.Description;
-import org.datacleaner.api.Initialize;
 import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.InputRow;
 import org.datacleaner.api.OutputColumns;
@@ -34,6 +32,7 @@ import org.datacleaner.api.Transformer;
 import org.datacleaner.components.categories.ImproveSuperCategory;
 import org.datacleaner.components.convert.ConvertToStringTransformer;
 import org.datacleaner.connection.ElasticSearchDatastore;
+import org.datacleaner.connection.UpdateableDatastoreConnection;
 import org.datacleaner.util.StringUtils;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.get.GetRequest;
@@ -64,18 +63,6 @@ public class ElasticSearchDocumentIdLookupTransformer implements Transformer {
     @Configured("ElasticSearch datastore")
     ElasticSearchDatastore elasticsearchDatastore;
 
-    private ElasticSearchDataContext _dataContext;
-
-    @Initialize
-    public void init() {
-        _dataContext = (ElasticSearchDataContext) elasticsearchDatastore.openConnection().getDataContext();
-    }
-
-    @Close
-    public void close() {
-        _dataContext.getElasticSearchClient().close();
-    }
-
     @Override
     public OutputColumns getOutputColumns() {
         return new OutputColumns(String.class, fields);
@@ -84,34 +71,38 @@ public class ElasticSearchDocumentIdLookupTransformer implements Transformer {
     @Override
     public String[] transform(InputRow row) {
 
-        final Client client = _dataContext.getElasticSearchClient();
-        final String[] result = new String[fields.length];
+        try (UpdateableDatastoreConnection openConnection = elasticsearchDatastore.openConnection()) {
+            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) openConnection.getDataContext();
 
-        final String id = ConvertToStringTransformer.transformValue(row.getValue(documentId));
-        if (StringUtils.isNullOrEmpty(id)) {
-            return result;
-        }
+            final Client client = dataContext.getElasticSearchClient();
+            final String[] result = new String[fields.length];
 
-        final GetRequest request = new GetRequestBuilder(client).setId(id).setType(documentType).setFields(fields)
-                .setIndex(elasticsearchDatastore.getIndexName()).setOperationThreaded(false).request();
-        final ActionFuture<GetResponse> getFuture = client.get(request);
-        final GetResponse response = getFuture.actionGet();
-
-        if (!response.isExists()) {
-            return result;
-        }
-
-        for (int i = 0; i < fields.length; i++) {
-            final String field = fields[i];
-            final GetField valueGetter = response.getField(field);
-            if (valueGetter == null) {
-                logger.info("Document with id '{}' did not have the field '{}'", id, field);
-            } else {
-                final Object value = valueGetter.getValue();
-                result[i] = ConvertToStringTransformer.transformValue(value);
+            final String id = ConvertToStringTransformer.transformValue(row.getValue(documentId));
+            logger.info("Id is {}", id);
+            if (StringUtils.isNullOrEmpty(id)) {
+                return result;
             }
-        }
 
-        return result;
+            final GetRequest request = new GetRequestBuilder(client).setId(id).setType(documentType).setFields(fields)
+                    .setIndex(elasticsearchDatastore.getIndexName()).setOperationThreaded(false).request();
+            final ActionFuture<GetResponse> getFuture = client.get(request);
+            final GetResponse response = getFuture.actionGet();
+            logger.info("Response is {}", response);
+            if (!response.isExists()) {
+                return result;
+            }
+
+            for (int i = 0; i < fields.length; i++) {
+                final String field = fields[i];
+                final GetField valueGetter = response.getField(field);
+                if (valueGetter == null) {
+                    logger.info("Document with id '{}' did not have the field '{}'", id, field);
+                } else {
+                    final Object value = valueGetter.getValue();
+                    result[i] = ConvertToStringTransformer.transformValue(value);
+                }
+            }
+            return result;
+        }
     }
 }
