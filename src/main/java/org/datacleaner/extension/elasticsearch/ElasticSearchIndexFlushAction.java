@@ -23,7 +23,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.metamodel.elasticsearch.ElasticSearchDataContext;
 import org.apache.metamodel.util.Action;
+import org.datacleaner.api.Close;
+import org.datacleaner.connection.ElasticSearchDatastore;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -38,23 +41,23 @@ import org.slf4j.LoggerFactory;
 public class ElasticSearchIndexFlushAction implements Action<Iterable<Object[]>> {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchIndexFlushAction.class);
-
-    private final ElasticSearchClientFactory _clientFactory;
+    private final ElasticSearchDataContext _dataContext;
     private final String[] _fields;
-    private final String _indexName;
     private final String _documentType;
+    private final ElasticSearchDatastore _elasticSearchDatastore;
 
-    public ElasticSearchIndexFlushAction(ElasticSearchClientFactory clientFactory, String[] fields, String indexName,
+    public ElasticSearchIndexFlushAction(ElasticSearchDatastore elasticSearchDatastore, String[] fields,
             String documentType) {
-        _clientFactory = clientFactory;
+        _elasticSearchDatastore = elasticSearchDatastore;
         _fields = fields;
-        _indexName = indexName;
         _documentType = documentType;
+        _dataContext = (ElasticSearchDataContext) _elasticSearchDatastore.openConnection().getDataContext();
     }
 
     @Override
     public void run(Iterable<Object[]> rows) throws Exception {
-        final Client client = _clientFactory.get();
+
+        final Client client = _dataContext.getElasticSearchClient();
         try {
             final BulkRequestBuilder bulkRequestBuilder = new BulkRequestBuilder(client);
 
@@ -66,15 +69,17 @@ public class ElasticSearchIndexFlushAction implements Action<Iterable<Object[]>>
                     Object value = row[i];
                     if (value != null) {
                         final Object valueInMap = map.get(field);
-                        //If already a value exist for a field, then add to the list.
+                        // If already a value exist for a field, then add to the
+                        // list.
                         if (valueInMap != null) {
-                           value = Arrays.asList(valueInMap, value); 
+                            value = Arrays.asList(valueInMap, value);
                         }
                         map.put(field, value);
                     }
                 }
                 logger.debug("Indexing record ({}): {}", id, map);
-                final IndexRequest indexRequest = new IndexRequest(_indexName, _documentType, id);
+                final IndexRequest indexRequest = new IndexRequest(_elasticSearchDatastore.getIndexName(),
+                        _documentType, id);
                 indexRequest.source(map);
                 indexRequest.operationThreaded(false);
                 bulkRequestBuilder.add(indexRequest);
@@ -96,6 +101,11 @@ public class ElasticSearchIndexFlushAction implements Action<Iterable<Object[]>>
             logger.error("Unexpected error occurred while flushing ElasticSearch index buffer", e);
             throw e;
         }
+    }
+
+    @Close
+    public void close() {
+        _dataContext.getElasticSearchClient().close();
     }
 
 }

@@ -42,10 +42,11 @@ import org.elasticsearch.node.NodeBuilder;
 
 public class ElasticSearchTestServer {
 
-    public static final int HTTP_PORT = 9205;
+    public static final String DATASTORE_NAME = "testdatastore";
+    public static final String HTTP_PORT = "9242";
     public static final String INDEX_NAME = "testindex";
     public static final String CLUSTER_NAME = "testcluster";
-    public static final String TRANSPORT_PORT = "9300";
+    public static final String TRANSPORT_PORT = "9342";
     public static final String DOCUMENT_TYPE = "testdoc";
 
     public static void main(String[] args) throws Exception {
@@ -68,9 +69,9 @@ public class ElasticSearchTestServer {
         settings.put("gateway.type", "none");
         settings.put("path.data", "target/search-data");
         settings.put("http.enabled", true);
-        
+
         settings.put("http.port", HTTP_PORT);
-        //settings.put("index.compound_format", false);
+        // settings.put("index.compound_format", false);
         settings.put("transport.tcp.port", TRANSPORT_PORT);
         _node = NodeBuilder.nodeBuilder().settings(settings).clusterName(CLUSTER_NAME).data(true).local(false).node();
 

@@ -21,6 +21,7 @@ package org.datacleaner.extension.elasticsearch;
 
 import javax.inject.Named;
 
+import org.apache.metamodel.elasticsearch.ElasticSearchDataContext;
 import org.datacleaner.api.Categorized;
 import org.datacleaner.api.Close;
 import org.datacleaner.api.Configured;
@@ -32,6 +33,7 @@ import org.datacleaner.api.OutputColumns;
 import org.datacleaner.api.Transformer;
 import org.datacleaner.components.categories.ImproveSuperCategory;
 import org.datacleaner.components.convert.ConvertToStringTransformer;
+import org.datacleaner.connection.ElasticSearchDatastore;
 import org.datacleaner.util.StringUtils;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.get.GetRequest;
@@ -53,31 +55,25 @@ public class ElasticSearchDocumentIdLookupTransformer implements Transformer {
     InputColumn<?> documentId;
 
     @Configured
-    String[] clusterHosts = { "localhost:9300" };
-
-    @Configured
-    String clusterName = "elasticsearch";
-
-    @Configured
-    String indexName;
-
-    @Configured
     String documentType;
 
     @Configured
     @Description("Fields to return")
     String[] fields;
 
-    private ElasticSearchClientFactory _clientFactory;
+    @Configured("ElasticSearch datastore")
+    ElasticSearchDatastore elasticsearchDatastore;
+
+    private ElasticSearchDataContext _dataContext;
 
     @Initialize
     public void init() {
-        _clientFactory = new ElasticSearchClientFactory(clusterHosts, clusterName);
+        _dataContext = (ElasticSearchDataContext) elasticsearchDatastore.openConnection().getDataContext();
     }
 
     @Close
     public void close() {
-        _clientFactory.close();
+        _dataContext.getElasticSearchClient().close();
     }
 
     @Override
@@ -87,6 +83,8 @@ public class ElasticSearchDocumentIdLookupTransformer implements Transformer {
 
     @Override
     public String[] transform(InputRow row) {
+
+        final Client client = _dataContext.getElasticSearchClient();
         final String[] result = new String[fields.length];
 
         final String id = ConvertToStringTransformer.transformValue(row.getValue(documentId));
@@ -94,9 +92,8 @@ public class ElasticSearchDocumentIdLookupTransformer implements Transformer {
             return result;
         }
 
-        final Client client = _clientFactory.get();
         final GetRequest request = new GetRequestBuilder(client).setId(id).setType(documentType).setFields(fields)
-                .setIndex(indexName).setOperationThreaded(false).request();
+                .setIndex(elasticsearchDatastore.getIndexName()).setOperationThreaded(false).request();
         final ActionFuture<GetResponse> getFuture = client.get(request);
         final GetResponse response = getFuture.actionGet();
 
