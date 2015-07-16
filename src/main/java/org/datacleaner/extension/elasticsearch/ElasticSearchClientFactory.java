@@ -32,7 +32,7 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
 /**
- * Use {@link ElasticSearchDatastore} instead.
+ * Use the class ElasticSearchDatastore instead.
  */
 @Deprecated
 public class ElasticSearchClientFactory extends LazyRef<Client> implements Closeable {

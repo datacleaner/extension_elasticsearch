@@ -25,16 +25,15 @@ import javax.inject.Named;
 
 import org.apache.metamodel.elasticsearch.ElasticSearchDataContext;
 import org.datacleaner.api.Categorized;
-import org.datacleaner.api.Close;
 import org.datacleaner.api.Configured;
 import org.datacleaner.api.Description;
-import org.datacleaner.api.Initialize;
 import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.InputRow;
 import org.datacleaner.api.OutputColumns;
 import org.datacleaner.api.Transformer;
 import org.datacleaner.components.categories.ImproveSuperCategory;
 import org.datacleaner.connection.ElasticSearchDatastore;
+import org.datacleaner.connection.UpdateableDatastoreConnection;
 import org.datacleaner.util.StringUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -44,11 +43,15 @@ import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Named("ElasticSearch full text search")
 @Description("Performs a full text search for every record into an ElasticSearch search index.")
 @Categorized(superCategory = ImproveSuperCategory.class, value = ElasticSearchCategory.class)
 public class ElasticSearchFullSearchTransformer implements Transformer {
+
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearchFullSearchTransformer.class);
 
     @Configured
     InputColumn<String> searchInput;
@@ -65,18 +68,6 @@ public class ElasticSearchFullSearchTransformer implements Transformer {
     @Configured(required = false)
     String searchFieldName;
 
-    private ElasticSearchDataContext _dataContext;
-
-    @Initialize
-    public void init() {
-        _dataContext = (ElasticSearchDataContext) elasticsearchDatastore.openConnection().getDataContext();
-    }
-
-    @Close
-    public void close() {
-        _dataContext.getElasticSearchClient().close();
-    }
-
     @Override
     public OutputColumns getOutputColumns() {
         String[] names = new String[] { "Document ID", "Document" };
@@ -92,33 +83,38 @@ public class ElasticSearchFullSearchTransformer implements Transformer {
         if (StringUtils.isNullOrEmpty(input)) {
             return result;
         }
+        try (UpdateableDatastoreConnection connection = elasticsearchDatastore.openConnection()) {
+            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) connection.getDataContext();
+            final Client client = dataContext.getElasticSearchClient();
+            MatchQueryBuilder query;
+            if (StringUtils.isNullOrEmpty(searchFieldName)) {
+                query = QueryBuilders.matchQuery("_all", input);
+            } else {
+                query = QueryBuilders.matchQuery(searchFieldName, input);
+            }
 
-        final Client client = _dataContext.getElasticSearchClient();
-        MatchQueryBuilder query;
-        if (StringUtils.isNullOrEmpty(searchFieldName)) {
-            query = QueryBuilders.matchQuery("_all", input);
-        } else {
-            query = QueryBuilders.matchQuery(searchFieldName, input);
-        }
+            if (!StringUtils.isNullOrEmpty(analyzerName)) {
+                query = query.analyzer(analyzerName);
+            }
 
-        if (!StringUtils.isNullOrEmpty(analyzerName)) {
-            query = query.analyzer(analyzerName);
-        }
+            final SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(client)
+                    .setIndices(elasticsearchDatastore.getIndexName()).setTypes(documentType).setQuery(query)
+                    .setSize(1).setSearchType(SearchType.QUERY_AND_FETCH).setExplain(true);
 
-        final SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(client)
-                .setIndices(elasticsearchDatastore.getIndexName()).setTypes(documentType).setQuery(query).setSize(1)
-                .setSearchType(SearchType.QUERY_AND_FETCH).setExplain(true);
+            final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
+            final SearchHits hits = searchResponse.getHits();
+            if (hits.getTotalHits() == 0) {
+                return result;
+            }
 
-        final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
-        final SearchHits hits = searchResponse.getHits();
-        if (hits.getTotalHits() == 0) {
+            final SearchHit hit = hits.getAt(0);
+            result[0] = hit.getId();
+            result[1] = hit.sourceAsMap();
+
             return result;
+        } catch (Exception e) {
+            logger.error("Exception while running the ElasticSearchFullSearchTransformer", e);
+            throw e;
         }
-
-        final SearchHit hit = hits.getAt(0);
-        result[0] = hit.getId();
-        result[1] = hit.sourceAsMap();
-
-        return result;
     }
 }

@@ -27,7 +27,6 @@ import javax.inject.Named;
 import org.apache.metamodel.elasticsearch.ElasticSearchDataContext;
 import org.datacleaner.api.Analyzer;
 import org.datacleaner.api.Categorized;
-import org.datacleaner.api.Close;
 import org.datacleaner.api.Configured;
 import org.datacleaner.api.Description;
 import org.datacleaner.api.Initialize;
@@ -40,6 +39,7 @@ import org.datacleaner.beans.writers.WriteDataResultImpl;
 import org.datacleaner.components.categories.WriteSuperCategory;
 import org.datacleaner.components.convert.ConvertToStringTransformer;
 import org.datacleaner.connection.ElasticSearchDatastore;
+import org.datacleaner.connection.UpdateableDatastoreConnection;
 import org.datacleaner.util.WriteBuffer;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -83,34 +83,33 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
     @Configured("ElasticSearch datastore")
     ElasticSearchDatastore elasticsearchDatastore;
 
-    private ElasticSearchDataContext _dataContext;
-
     private AtomicInteger _counter;
     private WriteBuffer _writeBuffer;
 
     @Initialize
     public void init() throws IOException {
 
-        _dataContext = (ElasticSearchDataContext) elasticsearchDatastore.openConnection().getDataContext();
-        final Client client = _dataContext.getElasticSearchClient();
-        _counter = new AtomicInteger(0);
-        _writeBuffer = new WriteBuffer(bulkIndexSize, new ElasticSearchIndexFlushAction(elasticsearchDatastore, fields,
-                documentType));
+        try (UpdateableDatastoreConnection connection = elasticsearchDatastore.openConnection()) {
+            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) connection.getDataContext();
 
-        final String indexName = elasticsearchDatastore.getIndexName();
+            final Client client = dataContext.getElasticSearchClient();
+            _counter = new AtomicInteger(0);
+            _writeBuffer = new WriteBuffer(bulkIndexSize, new ElasticSearchIndexFlushAction(elasticsearchDatastore,
+                    fields, documentType));
 
-        if (!client.admin().indices().prepareExists(indexName).execute().actionGet().isExists())
-            client.admin().indices().prepareCreate(indexName).execute().actionGet();
+            final String indexName = elasticsearchDatastore.getIndexName();
 
-        XContentBuilder builder = XContentFactory.jsonBuilder().startObject().startObject(documentType)
-                .field("date_detection", automaticDateDetection).endObject().endObject();
-        client.admin().indices().preparePutMapping(indexName).setType(documentType).setSource(builder).execute()
-                .actionGet();
-    }
+            if (!client.admin().indices().prepareExists(indexName).execute().actionGet().isExists())
+                client.admin().indices().prepareCreate(indexName).execute().actionGet();
 
-    @Close
-    public void close() {
-        _dataContext.getElasticSearchClient().close();
+            XContentBuilder builder = XContentFactory.jsonBuilder().startObject().startObject(documentType)
+                    .field("date_detection", automaticDateDetection).endObject().endObject();
+            client.admin().indices().preparePutMapping(indexName).setType(documentType).setSource(builder).execute()
+                    .actionGet();
+        } catch (Exception e) {
+            logger.error("Exception while running the ElasticSearchIndexAnalyzer", e);
+            throw e;
+        }
     }
 
     @Override

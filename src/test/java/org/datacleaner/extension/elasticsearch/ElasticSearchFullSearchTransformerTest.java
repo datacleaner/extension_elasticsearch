@@ -65,7 +65,6 @@ public class ElasticSearchFullSearchTransformerTest extends TestCase {
         assertEquals("OutputColumns[Document ID, Document]", out.toString());
 
         try {
-            transformer.init();
 
             _server.truncateIndex();
             assertEquals(0, _server.getDocumentCount());
@@ -94,7 +93,5 @@ public class ElasticSearchFullSearchTransformerTest extends TestCase {
             e.printStackTrace();
             throw e;
         }
-
-        transformer.close();
     }
 }

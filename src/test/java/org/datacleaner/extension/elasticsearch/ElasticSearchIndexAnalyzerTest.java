@@ -80,6 +80,5 @@ public class ElasticSearchIndexAnalyzerTest extends TestCase {
             throw e;
         }
 
-        analyzer.close();
     }
 }
