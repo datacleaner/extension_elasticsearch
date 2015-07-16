@@ -25,8 +25,8 @@ import java.util.Map;
 
 import org.apache.metamodel.elasticsearch.ElasticSearchDataContext;
 import org.apache.metamodel.util.Action;
-import org.datacleaner.api.Close;
 import org.datacleaner.connection.ElasticSearchDatastore;
+import org.datacleaner.connection.UpdateableDatastoreConnection;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 public class ElasticSearchIndexFlushAction implements Action<Iterable<Object[]>> {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchIndexFlushAction.class);
-    private final ElasticSearchDataContext _dataContext;
     private final String[] _fields;
     private final String _documentType;
     private final ElasticSearchDatastore _elasticSearchDatastore;
@@ -51,14 +50,14 @@ public class ElasticSearchIndexFlushAction implements Action<Iterable<Object[]>>
         _elasticSearchDatastore = elasticSearchDatastore;
         _fields = fields;
         _documentType = documentType;
-        _dataContext = (ElasticSearchDataContext) _elasticSearchDatastore.openConnection().getDataContext();
     }
 
     @Override
     public void run(Iterable<Object[]> rows) throws Exception {
 
-        final Client client = _dataContext.getElasticSearchClient();
-        try {
+        try (UpdateableDatastoreConnection connection = _elasticSearchDatastore.openConnection()) {
+            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) connection.getDataContext();
+            final Client client = dataContext.getElasticSearchClient();
             final BulkRequestBuilder bulkRequestBuilder = new BulkRequestBuilder(client);
 
             for (Object[] row : rows) {
@@ -101,11 +100,6 @@ public class ElasticSearchIndexFlushAction implements Action<Iterable<Object[]>>
             logger.error("Unexpected error occurred while flushing ElasticSearch index buffer", e);
             throw e;
         }
-    }
-
-    @Close
-    public void close() {
-        _dataContext.getElasticSearchClient().close();
     }
 
 }

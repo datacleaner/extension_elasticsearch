@@ -71,8 +71,8 @@ public class ElasticSearchDocumentIdLookupTransformer implements Transformer {
     @Override
     public String[] transform(InputRow row) {
 
-        try (UpdateableDatastoreConnection openConnection = elasticsearchDatastore.openConnection()) {
-            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) openConnection.getDataContext();
+        try (UpdateableDatastoreConnection connection = elasticsearchDatastore.openConnection()) {
+            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) connection.getDataContext();
 
             final Client client = dataContext.getElasticSearchClient();
             final String[] result = new String[fields.length];
@@ -103,6 +103,9 @@ public class ElasticSearchDocumentIdLookupTransformer implements Transformer {
                 }
             }
             return result;
+        } catch (Exception e) {
+            logger.error("Exception while running the ElasticSearchDocumentIdLookupTransformer", e);
+            throw e;
         }
     }
 }

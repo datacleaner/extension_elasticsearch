@@ -89,8 +89,8 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
     @Initialize
     public void init() throws IOException {
 
-        try (UpdateableDatastoreConnection openConnection = elasticsearchDatastore.openConnection()) {
-            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) openConnection.getDataContext();
+        try (UpdateableDatastoreConnection connection = elasticsearchDatastore.openConnection()) {
+            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) connection.getDataContext();
 
             final Client client = dataContext.getElasticSearchClient();
             _counter = new AtomicInteger(0);
@@ -106,6 +106,9 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
                     .field("date_detection", automaticDateDetection).endObject().endObject();
             client.admin().indices().preparePutMapping(indexName).setType(documentType).setSource(builder).execute()
                     .actionGet();
+        } catch (Exception e) {
+            logger.error("Exception while running the ElasticSearchIndexAnalyzer", e);
+            throw e;
         }
     }
 

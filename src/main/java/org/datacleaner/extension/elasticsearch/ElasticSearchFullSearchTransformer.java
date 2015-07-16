@@ -43,11 +43,15 @@ import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Named("ElasticSearch full text search")
 @Description("Performs a full text search for every record into an ElasticSearch search index.")
 @Categorized(superCategory = ImproveSuperCategory.class, value = ElasticSearchCategory.class)
 public class ElasticSearchFullSearchTransformer implements Transformer {
+
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearchFullSearchTransformer.class);
 
     @Configured
     InputColumn<String> searchInput;
@@ -71,7 +75,6 @@ public class ElasticSearchFullSearchTransformer implements Transformer {
         return new OutputColumns(names, types);
     }
 
-   
     @Override
     public Object[] transform(InputRow row) {
         final Object[] result = new Object[2];
@@ -80,9 +83,8 @@ public class ElasticSearchFullSearchTransformer implements Transformer {
         if (StringUtils.isNullOrEmpty(input)) {
             return result;
         }
-        try (UpdateableDatastoreConnection openConnection = elasticsearchDatastore.openConnection()) {
-            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) openConnection.getDataContext();
-
+        try (UpdateableDatastoreConnection connection = elasticsearchDatastore.openConnection()) {
+            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) connection.getDataContext();
             final Client client = dataContext.getElasticSearchClient();
             MatchQueryBuilder query;
             if (StringUtils.isNullOrEmpty(searchFieldName)) {
@@ -110,6 +112,9 @@ public class ElasticSearchFullSearchTransformer implements Transformer {
             result[1] = hit.sourceAsMap();
 
             return result;
+        } catch (Exception e) {
+            logger.error("Exception while running the ElasticSearchFullSearchTransformer", e);
+            throw e;
         }
     }
 }
