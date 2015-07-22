@@ -30,7 +30,7 @@ import org.datacleaner.api.Description;
 import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.InputRow;
 import org.datacleaner.api.OutputColumns;
-import org.datacleaner.api.Transformer;
+import org.datacleaner.api.TableProperty;
 import org.datacleaner.components.categories.ImproveSuperCategory;
 import org.datacleaner.connection.ElasticSearchDatastore;
 import org.datacleaner.connection.UpdateableDatastoreConnection;
@@ -49,23 +49,24 @@ import org.slf4j.LoggerFactory;
 @Named("ElasticSearch full text search")
 @Description("Performs a full text search for every record into an ElasticSearch search index.")
 @Categorized(superCategory = ImproveSuperCategory.class, value = ElasticSearchCategory.class)
-public class ElasticSearchFullSearchTransformer implements Transformer {
+public class ElasticSearchFullSearchTransformer implements ElasticSearchTransformer {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchFullSearchTransformer.class);
 
     @Configured
     InputColumn<String> searchInput;
 
-    @Configured("ElasticSearch datastore")
+    @Configured(order = 1, value = PROPERTY_ES_DATASTORE)
     ElasticSearchDatastore elasticsearchDatastore;
 
-    @Configured
+    @Configured(order = 2, value = PROPERTY_DOCUMENT_TYPE)
+    @TableProperty
     String documentType;
 
-    @Configured(required = false)
+    @Configured(order = 3, required = false)
     String analyzerName;
 
-    @Configured(required = false)
+    @Configured(order = 4, required = false)
     String searchFieldName;
 
     @Override

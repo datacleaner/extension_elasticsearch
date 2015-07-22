@@ -28,7 +28,7 @@ import org.datacleaner.api.Description;
 import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.InputRow;
 import org.datacleaner.api.OutputColumns;
-import org.datacleaner.api.Transformer;
+import org.datacleaner.api.TableProperty;
 import org.datacleaner.components.categories.ImproveSuperCategory;
 import org.datacleaner.components.convert.ConvertToStringTransformer;
 import org.datacleaner.connection.ElasticSearchDatastore;
@@ -46,22 +46,23 @@ import org.slf4j.LoggerFactory;
 @Named("ElasticSearch document ID lookup")
 @Description("Look up documents in ElasticSearch by providing a document ID")
 @Categorized(superCategory = ImproveSuperCategory.class, value = ElasticSearchCategory.class)
-public class ElasticSearchDocumentIdLookupTransformer implements Transformer {
+public class ElasticSearchDocumentIdLookupTransformer implements ElasticSearchTransformer {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchDocumentIdLookupTransformer.class);
 
     @Configured
     InputColumn<?> documentId;
 
-    @Configured
+    @Configured(order = 1, value = PROPERTY_ES_DATASTORE)
+    ElasticSearchDatastore elasticsearchDatastore;
+
+    @Configured(order = 2, value = PROPERTY_DOCUMENT_TYPE)
+    @TableProperty
     String documentType;
 
-    @Configured
+    @Configured(order = 3)
     @Description("Fields to return")
     String[] fields;
-
-    @Configured("ElasticSearch datastore")
-    ElasticSearchDatastore elasticsearchDatastore;
 
     @Override
     public OutputColumns getOutputColumns() {
