@@ -65,13 +65,13 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
     String[] fields;
 
     @Configured
-    String documentType;
-
-    @Configured
     InputColumn<?> idColumn;
 
-    @Configured
-    boolean createIndex = false;
+    @Configured(value = "ElasticSearch index", order = 1)
+    ElasticSearchDatastore elasticsearchDatastore;
+
+    @Configured(order = 2)
+    String documentType;
 
     @Configured
     @NumberProperty(negative = false, zero = false)
@@ -79,9 +79,6 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
 
     @Configured(required = false)
     boolean automaticDateDetection = false;
-
-    @Configured("ElasticSearch datastore")
-    ElasticSearchDatastore elasticsearchDatastore;
 
     private AtomicInteger _counter;
     private WriteBuffer _writeBuffer;
@@ -140,10 +137,6 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
 
     public void setBulkIndexSize(int bulkIndexSize) {
         this.bulkIndexSize = bulkIndexSize;
-    }
-
-    public void setCreateIndex(boolean createIndex) {
-        this.createIndex = createIndex;
     }
 
     public void setDocumentType(String documentType) {

@@ -33,10 +33,9 @@
 		<analyzer requires="outcome_0">
 			<descriptor ref="ElasticSearch indexer" />
 			<properties>
-				<property value="false" name="Create index" />
 				<property value="testdoc" name="Document type" />
 				<property value="[street,housenumber,zip,city]" name="Fields" />
-				<property name="ElasticSearch datastore" value="testdatastore" />
+				<property name="ElasticSearch index" value="testdatastore" />
 			</properties>
 			<input name="Id column" ref="col_0" />
 			<input name="Values" ref="col_5" />
