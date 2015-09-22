@@ -30,6 +30,7 @@ import org.datacleaner.api.InputRow;
 import org.datacleaner.api.OutputColumns;
 import org.datacleaner.api.TableProperty;
 import org.datacleaner.components.categories.ImproveSuperCategory;
+import org.datacleaner.components.categories.ReferenceDataCategory;
 import org.datacleaner.components.convert.ConvertToStringTransformer;
 import org.datacleaner.connection.ElasticSearchDatastore;
 import org.datacleaner.connection.UpdateableDatastoreConnection;
@@ -45,7 +46,7 @@ import org.slf4j.LoggerFactory;
 
 @Named("ElasticSearch document ID lookup")
 @Description("Look up documents in ElasticSearch by providing a document ID")
-@Categorized(superCategory = ImproveSuperCategory.class, value = ElasticSearchCategory.class)
+@Categorized(superCategory = ImproveSuperCategory.class, value = ReferenceDataCategory.class)
 public class ElasticSearchDocumentIdLookupTransformer implements ElasticSearchTransformer {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchDocumentIdLookupTransformer.class);
