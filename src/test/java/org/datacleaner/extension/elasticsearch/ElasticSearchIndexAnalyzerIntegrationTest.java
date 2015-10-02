@@ -34,6 +34,7 @@ import org.datacleaner.configuration.DataCleanerEnvironment;
 import org.datacleaner.configuration.DataCleanerEnvironmentImpl;
 import org.datacleaner.connection.CsvDatastore;
 import org.datacleaner.connection.ElasticSearchDatastore;
+import org.datacleaner.connection.ElasticSearchDatastore.ClientType;
 import org.datacleaner.descriptors.Descriptors;
 import org.datacleaner.descriptors.SimpleDescriptorProvider;
 import org.datacleaner.job.AnalysisJob;
@@ -70,7 +71,7 @@ public class ElasticSearchIndexAnalyzerIntegrationTest extends TestCase {
         final CsvDatastore ds = new CsvDatastore("AddressAccess.csv", resource, filename, '"', ';', '\\', "UTF8", true,
                 1);
         final ElasticSearchDatastore elasticSearchDatastore = new ElasticSearchDatastore(
-                ElasticSearchTestServer.DATASTORE_NAME, "localhost",
+                ElasticSearchTestServer.DATASTORE_NAME, ClientType.TRANSPORT, "localhost",
                 Integer.parseInt(ElasticSearchTestServer.TRANSPORT_PORT), ElasticSearchTestServer.CLUSTER_NAME,
                 ElasticSearchTestServer.INDEX_NAME);
         final SimpleDescriptorProvider descriptorProvider = new SimpleDescriptorProvider();

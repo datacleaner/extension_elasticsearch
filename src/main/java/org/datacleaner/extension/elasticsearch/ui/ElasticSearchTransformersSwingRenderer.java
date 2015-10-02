@@ -46,7 +46,7 @@ public class ElasticSearchTransformersSwingRenderer implements
 
     @Inject
     DataCleanerConfiguration configuration;
-
+    
     @Override
     public RendererPrecedence getPrecedence(TransformerComponentBuilder<ElasticSearchTransformer> tcb) {
         Class<ElasticSearchTransformer> componentClass = tcb.getDescriptor().getComponentClass();
@@ -60,7 +60,7 @@ public class ElasticSearchTransformersSwingRenderer implements
     public TransformerComponentBuilderPresenter render(TransformerComponentBuilder<ElasticSearchTransformer> tcb) {
         final PropertyWidgetFactory propertyWidgetFactory = dcModule.createChildInjectorForComponent(tcb).getInstance(
                 PropertyWidgetFactory.class);
-        return new ElasticSearchTransformerPanel(tcb, windowContext, propertyWidgetFactory, configuration);
+        return new ElasticSearchTransformerPanel(tcb, windowContext, propertyWidgetFactory, configuration, dcModule);
     }
 
 }

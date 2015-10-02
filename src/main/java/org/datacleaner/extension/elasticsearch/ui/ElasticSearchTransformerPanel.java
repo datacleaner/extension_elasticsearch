@@ -26,6 +26,7 @@ import org.datacleaner.connection.Datastore;
 import org.datacleaner.connection.DatastoreConnection;
 import org.datacleaner.descriptors.ConfiguredPropertyDescriptor;
 import org.datacleaner.extension.elasticsearch.ElasticSearchTransformer;
+import org.datacleaner.guice.DCModule;
 import org.datacleaner.job.builder.ComponentBuilder;
 import org.datacleaner.job.builder.TransformerComponentBuilder;
 import org.datacleaner.panels.TransformerComponentBuilderPanel;
@@ -47,7 +48,7 @@ public class ElasticSearchTransformerPanel extends TransformerComponentBuilderPa
 
     public ElasticSearchTransformerPanel(TransformerComponentBuilder<ElasticSearchTransformer> tcb,
             WindowContext windowContext, PropertyWidgetFactory propertyWidgetFactory,
-            DataCleanerConfiguration configuration) {
+            DataCleanerConfiguration configuration, DCModule dcModule) {
         super(tcb, windowContext, propertyWidgetFactory, configuration);
 
         _datastoreProperty = tcb.getDescriptor().getConfiguredProperty(ElasticSearchTransformer.PROPERTY_ES_DATASTORE);
@@ -55,7 +56,7 @@ public class ElasticSearchTransformerPanel extends TransformerComponentBuilderPa
                 ElasticSearchTransformer.PROPERTY_DOCUMENT_TYPE);
 
         _datastoreWidget = new SingleDatastorePropertyWidget(tcb, _datastoreProperty,
-                configuration.getDatastoreCatalog());
+                configuration.getDatastoreCatalog(), dcModule);
         _documentTypeWidget = new SingleTableNamePropertyWidget(tcb, _documentTypeProperty, windowContext);
 
         _datastoreWidget.addComboListener(new Listener<Datastore>() {

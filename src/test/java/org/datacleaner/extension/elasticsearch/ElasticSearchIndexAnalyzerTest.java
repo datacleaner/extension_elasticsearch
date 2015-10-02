@@ -23,6 +23,7 @@ import junit.framework.TestCase;
 
 import org.datacleaner.api.InputColumn;
 import org.datacleaner.connection.ElasticSearchDatastore;
+import org.datacleaner.connection.ElasticSearchDatastore.ClientType;
 import org.datacleaner.data.MockInputColumn;
 import org.datacleaner.data.MockInputRow;
 import org.datacleaner.extension.elasticsearch.ElasticSearchIndexAnalyzer;
@@ -37,7 +38,7 @@ public class ElasticSearchIndexAnalyzerTest extends TestCase {
         super.setUp();
         _server = new ElasticSearchTestServer();
         _server.startup();
-        _elasticSearchDatastore = new ElasticSearchDatastore(null, "localhost",
+        _elasticSearchDatastore = new ElasticSearchDatastore(null, ClientType.TRANSPORT, "localhost",
                 Integer.parseInt(ElasticSearchTestServer.TRANSPORT_PORT), ElasticSearchTestServer.CLUSTER_NAME,
                 ElasticSearchTestServer.INDEX_NAME);
     }
