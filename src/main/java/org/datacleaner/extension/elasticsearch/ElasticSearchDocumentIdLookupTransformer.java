@@ -22,9 +22,12 @@ package org.datacleaner.extension.elasticsearch;
 import javax.inject.Named;
 
 import org.apache.metamodel.elasticsearch.ElasticSearchDataContext;
+import org.apache.metamodel.util.FileHelper;
 import org.datacleaner.api.Categorized;
+import org.datacleaner.api.Close;
 import org.datacleaner.api.Configured;
 import org.datacleaner.api.Description;
+import org.datacleaner.api.Initialize;
 import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.InputRow;
 import org.datacleaner.api.OutputColumns;
@@ -65,6 +68,21 @@ public class ElasticSearchDocumentIdLookupTransformer implements ElasticSearchTr
     @Description("Fields to return")
     String[] fields;
 
+    private UpdateableDatastoreConnection _connection;
+
+    @Initialize
+    public void init() {
+        _connection = elasticsearchDatastore.openConnection();
+    }
+
+    @Close
+    public void close() {
+        if (_connection != null) {
+            FileHelper.safeClose(_connection);
+            _connection = null;
+        }
+    }
+
     @Override
     public OutputColumns getOutputColumns() {
         return new OutputColumns(String.class, fields);
@@ -73,8 +91,8 @@ public class ElasticSearchDocumentIdLookupTransformer implements ElasticSearchTr
     @Override
     public String[] transform(InputRow row) {
 
-        try (UpdateableDatastoreConnection connection = elasticsearchDatastore.openConnection()) {
-            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) connection.getDataContext();
+        try {
+            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) _connection.getDataContext();
 
             final Client client = dataContext.getElasticSearchClient();
             final String[] result = new String[fields.length];
