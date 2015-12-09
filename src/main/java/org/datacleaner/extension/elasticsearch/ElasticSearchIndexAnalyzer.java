@@ -19,14 +19,15 @@
  */
 package org.datacleaner.extension.elasticsearch;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Named;
 
 import org.apache.metamodel.elasticsearch.ElasticSearchDataContext;
+import org.apache.metamodel.util.FileHelper;
 import org.datacleaner.api.Analyzer;
 import org.datacleaner.api.Categorized;
+import org.datacleaner.api.Close;
 import org.datacleaner.api.Configured;
 import org.datacleaner.api.Description;
 import org.datacleaner.api.Initialize;
@@ -82,17 +83,19 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
 
     private AtomicInteger _counter;
     private WriteBuffer _writeBuffer;
+    private UpdateableDatastoreConnection _connection;
 
     @Initialize
-    public void init() throws IOException {
+    public void init() throws Exception {
+        _connection = elasticsearchDatastore.openConnection();
 
-        try (UpdateableDatastoreConnection connection = elasticsearchDatastore.openConnection()) {
-            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) connection.getDataContext();
+        try {
+            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) _connection.getDataContext();
 
             final Client client = dataContext.getElasticSearchClient();
             _counter = new AtomicInteger(0);
-            _writeBuffer = new WriteBuffer(bulkIndexSize, new ElasticSearchIndexFlushAction(elasticsearchDatastore,
-                    fields, documentType));
+            _writeBuffer = new WriteBuffer(bulkIndexSize, new ElasticSearchIndexFlushAction(dataContext, fields,
+                    documentType));
 
             final String indexName = elasticsearchDatastore.getIndexName();
 
@@ -105,7 +108,16 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
                     .actionGet();
         } catch (Exception e) {
             logger.error("Exception while running the ElasticSearchIndexAnalyzer", e);
+            FileHelper.safeClose(_connection);
             throw e;
+        }
+    }
+
+    @Close
+    public void close() {
+        if (_connection != null) {
+            FileHelper.safeClose(_connection);
+            _connection = null;
         }
     }
 

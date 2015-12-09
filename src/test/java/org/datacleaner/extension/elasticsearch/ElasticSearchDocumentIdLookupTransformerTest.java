@@ -62,8 +62,8 @@ public class ElasticSearchDocumentIdLookupTransformerTest extends TestCase {
         OutputColumns out = transformer.getOutputColumns();
         assertEquals("OutputColumns[city, country]", out.toString());
 
+        transformer.init();
         try {
-
             _server.truncateIndex();
             assertEquals(0, _server.getDocumentCount());
 
@@ -83,10 +83,8 @@ public class ElasticSearchDocumentIdLookupTransformerTest extends TestCase {
 
             output = transformer.transform(new MockInputRow().put(col1, "del"));
             assertEquals("[Delhi, India]", Arrays.toString(output));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
+        } finally {
+            transformer.close();
         }
 
     }

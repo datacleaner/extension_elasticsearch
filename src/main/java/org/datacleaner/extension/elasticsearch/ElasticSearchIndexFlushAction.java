@@ -25,8 +25,6 @@ import java.util.Map;
 
 import org.apache.metamodel.elasticsearch.ElasticSearchDataContext;
 import org.apache.metamodel.util.Action;
-import org.datacleaner.connection.ElasticSearchDatastore;
-import org.datacleaner.connection.UpdateableDatastoreConnection;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -43,21 +41,19 @@ public class ElasticSearchIndexFlushAction implements Action<Iterable<Object[]>>
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchIndexFlushAction.class);
     private final String[] _fields;
     private final String _documentType;
-    private final ElasticSearchDatastore _elasticSearchDatastore;
+    private final ElasticSearchDataContext _elasticSearchDataContext;
 
-    public ElasticSearchIndexFlushAction(ElasticSearchDatastore elasticSearchDatastore, String[] fields,
+    public ElasticSearchIndexFlushAction(ElasticSearchDataContext elasticSearchDataContext, String[] fields,
             String documentType) {
-        _elasticSearchDatastore = elasticSearchDatastore;
+        _elasticSearchDataContext = elasticSearchDataContext;
         _fields = fields;
         _documentType = documentType;
     }
 
     @Override
     public void run(Iterable<Object[]> rows) throws Exception {
-
-        try (UpdateableDatastoreConnection connection = _elasticSearchDatastore.openConnection()) {
-            final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) connection.getDataContext();
-            final Client client = dataContext.getElasticSearchClient();
+        try {
+            final Client client = _elasticSearchDataContext.getElasticSearchClient();
             final BulkRequestBuilder bulkRequestBuilder = new BulkRequestBuilder(client);
 
             for (Object[] row : rows) {
@@ -77,7 +73,7 @@ public class ElasticSearchIndexFlushAction implements Action<Iterable<Object[]>>
                     }
                 }
                 logger.debug("Indexing record ({}): {}", id, map);
-                final IndexRequest indexRequest = new IndexRequest(_elasticSearchDatastore.getIndexName(),
+                final IndexRequest indexRequest = new IndexRequest(_elasticSearchDataContext.getIndexName(),
                         _documentType, id);
                 indexRequest.source(map);
                 indexRequest.operationThreaded(false);

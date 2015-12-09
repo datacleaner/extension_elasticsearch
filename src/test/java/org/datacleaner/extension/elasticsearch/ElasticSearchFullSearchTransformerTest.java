@@ -61,12 +61,13 @@ public class ElasticSearchFullSearchTransformerTest extends TestCase {
         transformer.searchInput = col1;
         transformer.documentType = ElasticSearchTestServer.DOCUMENT_TYPE;
         transformer.elasticsearchDatastore = _elasticSearchDatastore;
+        
 
         OutputColumns out = transformer.getOutputColumns();
         assertEquals("OutputColumns[Document ID, Document]", out.toString());
 
+        transformer.init();
         try {
-
             _server.truncateIndex();
             assertEquals(0, _server.getDocumentCount());
 
@@ -89,10 +90,8 @@ public class ElasticSearchFullSearchTransformerTest extends TestCase {
             output = transformer.transform(new MockInputRow().put(col1, "n/a"));
             assertEquals("null", String.valueOf(output[0]));
             assertEquals("null", String.valueOf(output[1]));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
+        } finally {
+            transformer.close();
         }
     }
 }
