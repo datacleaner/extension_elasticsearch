@@ -23,7 +23,7 @@ import java.util.Map;
 
 import javax.inject.Named;
 
-import org.apache.metamodel.elasticsearch.ElasticSearchDataContext;
+import org.apache.metamodel.elasticsearch.nativeclient.ElasticSearchDataContext;
 import org.apache.metamodel.util.FileHelper;
 import org.datacleaner.api.Categorized;
 import org.datacleaner.api.Close;

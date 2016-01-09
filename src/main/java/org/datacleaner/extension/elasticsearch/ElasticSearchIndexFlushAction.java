@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.metamodel.elasticsearch.ElasticSearchDataContext;
+import org.apache.metamodel.elasticsearch.nativeclient.ElasticSearchDataContext;
 import org.apache.metamodel.util.Action;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
