@@ -7,14 +7,14 @@
 	</parent>
 	<groupId>org.eobjects.datacleaner.extensions</groupId>
 	<artifactId>DataCleaner-elasticsearch</artifactId>
-	<version>2.11</version>
+	<version>2.12-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<scm>
 		<url>https://github.com/datacleaner/extension_elasticsearch</url>
 		<connection>scm:git:https://github.com/datacleaner/extension_elasticsearch.git</connection>
 		<developerConnection>scm:git:https://github.com/datacleaner/extension_elasticsearch.git</developerConnection>
-		<tag>DataCleaner-elasticsearch-2.11</tag>
+		<tag>HEAD</tag>
 	</scm>
 	<build>
 		<plugins>
