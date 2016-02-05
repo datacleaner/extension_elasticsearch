@@ -34,6 +34,7 @@ import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.InputRow;
 import org.datacleaner.api.OutputColumns;
 import org.datacleaner.api.TableProperty;
+import org.datacleaner.api.Validate;
 import org.datacleaner.components.categories.ImproveSuperCategory;
 import org.datacleaner.components.categories.ReferenceDataCategory;
 import org.datacleaner.connection.ElasticSearchDatastore;
@@ -74,6 +75,13 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
     String searchFieldName;
     
     private UpdateableDatastoreConnection _connection;
+    
+    @Validate
+    public void validate() {
+        if (elasticsearchDatastore.getClientType().equals(ElasticSearchDatastore.ClientType.REST)) {
+            throw new IllegalStateException(ElasticSearchTransformer.CONNECTION_TYPE_ERROR);
+        }
+    }
     
     @Initialize
     public void init() {

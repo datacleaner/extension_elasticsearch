@@ -25,4 +25,5 @@ public interface ElasticSearchTransformer extends Transformer {
 
     public static final String PROPERTY_ES_DATASTORE = "ElasticSearch index";
     public static final String PROPERTY_DOCUMENT_TYPE = "Document type";
+    public static final String CONNECTION_TYPE_ERROR = "This component requires the connection to ElasticSearch to be done as a NODE or via TRANSPORT protocol";
 }

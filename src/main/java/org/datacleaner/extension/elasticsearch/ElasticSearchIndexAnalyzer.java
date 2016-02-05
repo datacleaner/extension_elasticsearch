@@ -35,6 +35,7 @@ import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.InputRow;
 import org.datacleaner.api.MappedProperty;
 import org.datacleaner.api.NumberProperty;
+import org.datacleaner.api.Validate;
 import org.datacleaner.beans.writers.WriteDataResult;
 import org.datacleaner.beans.writers.WriteDataResultImpl;
 import org.datacleaner.components.categories.WriteSuperCategory;
@@ -85,6 +86,13 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
     private WriteBuffer _writeBuffer;
     private UpdateableDatastoreConnection _connection;
 
+    @Validate
+    public void validate() {
+        if (elasticsearchDatastore.getClientType().equals(ElasticSearchDatastore.ClientType.REST)) {
+            throw new IllegalStateException(ElasticSearchTransformer.CONNECTION_TYPE_ERROR);
+        }
+    }
+    
     @Initialize
     public void init() throws Exception {
         _connection = elasticsearchDatastore.openConnection();
