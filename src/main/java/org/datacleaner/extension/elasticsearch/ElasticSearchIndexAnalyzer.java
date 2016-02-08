@@ -42,6 +42,8 @@ import org.datacleaner.components.categories.WriteSuperCategory;
 import org.datacleaner.components.convert.ConvertToStringTransformer;
 import org.datacleaner.connection.ElasticSearchDatastore;
 import org.datacleaner.connection.UpdateableDatastoreConnection;
+import org.datacleaner.connection.ElasticSearchDatastore.ClientType;
+import org.datacleaner.extension.elasticsearch.ui.IllegalElasticSearchConnectorException;
 import org.datacleaner.util.WriteBuffer;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -88,8 +90,15 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
 
     @Validate
     public void validate() {
-        if (elasticsearchDatastore.getClientType().equals(ElasticSearchDatastore.ClientType.REST)) {
-            throw new IllegalStateException(ElasticSearchTransformer.CONNECTION_TYPE_ERROR);
+        final ClientType clientType = elasticsearchDatastore.getClientType();
+        switch (clientType) {
+        case NODE:
+        case TRANSPORT:
+            return;
+        case REST:
+            throw new IllegalElasticSearchConnectorException();
+        default:
+            // do nothing
         }
     }
     

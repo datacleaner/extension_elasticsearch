@@ -17,12 +17,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.datacleaner.extension.elasticsearch;
+package org.datacleaner.extension.elasticsearch.ui;
 
-import org.datacleaner.api.Transformer;
+/**
+ * This exception is thrown in case the ElasticSearch connector is not done via
+ * NODE or TRANSPORT protocol.
+ */
+public class IllegalElasticSearchConnectorException extends IllegalStateException {
+    private static final long serialVersionUID = 1L;
 
-public interface ElasticSearchTransformer extends Transformer {
-
-    public static final String PROPERTY_ES_DATASTORE = "ElasticSearch index";
-    public static final String PROPERTY_DOCUMENT_TYPE = "Document type";
+    public IllegalElasticSearchConnectorException() {
+        super("This component requires the connection to ElasticSearch to be done as a NODE or via TRANSPORT protocol");
+    }
 }

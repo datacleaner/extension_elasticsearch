@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.eobjects.datacleaner</groupId>
 		<artifactId>DataCleaner</artifactId>
-		<version>4.5.4</version>
+		<version>5.0-SNAPSHOT</version>
 	</parent>
 	<groupId>org.eobjects.datacleaner.extensions</groupId>
 	<artifactId>DataCleaner-elasticsearch</artifactId>
@@ -41,7 +41,7 @@
 			<!-- Include DataCleaner as a provided dependency -->
 			<groupId>org.eobjects.datacleaner</groupId>
 			<artifactId>DataCleaner-desktop-ui</artifactId>
-			<version>4.5.4</version>
+			<version>5.0-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 
