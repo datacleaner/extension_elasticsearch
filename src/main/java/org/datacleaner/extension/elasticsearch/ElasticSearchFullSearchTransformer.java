@@ -34,10 +34,13 @@ import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.InputRow;
 import org.datacleaner.api.OutputColumns;
 import org.datacleaner.api.TableProperty;
+import org.datacleaner.api.Validate;
 import org.datacleaner.components.categories.ImproveSuperCategory;
 import org.datacleaner.components.categories.ReferenceDataCategory;
 import org.datacleaner.connection.ElasticSearchDatastore;
+import org.datacleaner.connection.ElasticSearchDatastore.ClientType;
 import org.datacleaner.connection.UpdateableDatastoreConnection;
+import org.datacleaner.extension.elasticsearch.ui.IllegalElasticSearchConnectorException;
 import org.datacleaner.util.StringUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -74,6 +77,20 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
     String searchFieldName;
     
     private UpdateableDatastoreConnection _connection;
+    
+    @Validate
+    public void validate() {
+        final ClientType clientType = elasticsearchDatastore.getClientType();
+        switch (clientType) {
+        case NODE:
+        case TRANSPORT:
+            return;
+        case REST:
+            throw new IllegalElasticSearchConnectorException();
+        default:
+            // do nothing
+        }
+    }
     
     @Initialize
     public void init() {

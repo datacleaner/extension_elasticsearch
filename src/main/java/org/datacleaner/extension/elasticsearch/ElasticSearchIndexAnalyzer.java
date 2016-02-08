@@ -35,12 +35,15 @@ import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.InputRow;
 import org.datacleaner.api.MappedProperty;
 import org.datacleaner.api.NumberProperty;
+import org.datacleaner.api.Validate;
 import org.datacleaner.beans.writers.WriteDataResult;
 import org.datacleaner.beans.writers.WriteDataResultImpl;
 import org.datacleaner.components.categories.WriteSuperCategory;
 import org.datacleaner.components.convert.ConvertToStringTransformer;
 import org.datacleaner.connection.ElasticSearchDatastore;
 import org.datacleaner.connection.UpdateableDatastoreConnection;
+import org.datacleaner.connection.ElasticSearchDatastore.ClientType;
+import org.datacleaner.extension.elasticsearch.ui.IllegalElasticSearchConnectorException;
 import org.datacleaner.util.WriteBuffer;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -85,6 +88,20 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
     private WriteBuffer _writeBuffer;
     private UpdateableDatastoreConnection _connection;
 
+    @Validate
+    public void validate() {
+        final ClientType clientType = elasticsearchDatastore.getClientType();
+        switch (clientType) {
+        case NODE:
+        case TRANSPORT:
+            return;
+        case REST:
+            throw new IllegalElasticSearchConnectorException();
+        default:
+            // do nothing
+        }
+    }
+    
     @Initialize
     public void init() throws Exception {
         _connection = elasticsearchDatastore.openConnection();
