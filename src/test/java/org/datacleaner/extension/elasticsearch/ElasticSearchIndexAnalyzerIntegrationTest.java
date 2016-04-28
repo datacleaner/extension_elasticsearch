@@ -102,15 +102,21 @@ public class ElasticSearchIndexAnalyzerIntegrationTest extends TestCase {
         }
 
         WriteDataResult result = (WriteDataResult) resultFuture.getResults().get(0);
-        assertEquals(8, result.getWrittenRowCount());
+        assertEquals(9, result.getWrittenRowCount());
 
-        assertEquals(8, _server.getDocumentCount());
+        assertEquals(9, _server.getDocumentCount());
 
         try (Client client = _server.getClient()) {
             SearchResponse searchResponse = new SearchRequestBuilder(client)
                     .setIndices(ElasticSearchTestServer.INDEX_NAME).setTypes(ElasticSearchTestServer.DOCUMENT_TYPE)
                     .setQuery(QueryBuilders.queryString("Allersgade")).execute().actionGet();
             assertEquals(2l, searchResponse.getHits().getTotalHits());
+
+            searchResponse = new SearchRequestBuilder(client)
+                    .setIndices(ElasticSearchTestServer.INDEX_NAME).setTypes(ElasticSearchTestServer.DOCUMENT_TYPE)
+                    .setQuery(QueryBuilders.termQuery("street.raw", "Burgmeester Daleslaan")).execute().actionGet();
+            assertEquals(1l, searchResponse.getHits().getTotalHits());
+
         } catch (Exception e) {
             e.printStackTrace();
             throw e;

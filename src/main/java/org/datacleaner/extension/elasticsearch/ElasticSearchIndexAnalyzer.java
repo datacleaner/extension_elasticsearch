@@ -41,8 +41,8 @@ import org.datacleaner.beans.writers.WriteDataResultImpl;
 import org.datacleaner.components.categories.WriteSuperCategory;
 import org.datacleaner.components.convert.ConvertToStringTransformer;
 import org.datacleaner.connection.ElasticSearchDatastore;
-import org.datacleaner.connection.UpdateableDatastoreConnection;
 import org.datacleaner.connection.ElasticSearchDatastore.ClientType;
+import org.datacleaner.connection.UpdateableDatastoreConnection;
 import org.datacleaner.extension.elasticsearch.ui.IllegalElasticSearchConnectorException;
 import org.datacleaner.util.WriteBuffer;
 import org.elasticsearch.client.Client;
@@ -84,6 +84,9 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
     @Configured(required = false)
     boolean automaticDateDetection = false;
 
+    @Configured(required = false)
+    boolean keepStringFieldsNotAnalyzedAlso = true;
+
     private AtomicInteger _counter;
     private WriteBuffer _writeBuffer;
     private UpdateableDatastoreConnection _connection;
@@ -101,7 +104,7 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
             // do nothing
         }
     }
-    
+
     @Initialize
     public void init() throws Exception {
         _connection = elasticsearchDatastore.openConnection();
@@ -119,8 +122,32 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
             if (!client.admin().indices().prepareExists(indexName).execute().actionGet().isExists())
                 client.admin().indices().prepareCreate(indexName).execute().actionGet();
 
-            XContentBuilder builder = XContentFactory.jsonBuilder().startObject().startObject(documentType)
-                    .field("date_detection", automaticDateDetection).endObject().endObject();
+            XContentBuilder builder = XContentFactory.jsonBuilder()
+                    .startObject()
+                    .startObject(documentType)
+                    .field("date_detection", automaticDateDetection);
+
+            if (keepStringFieldsNotAnalyzedAlso) {
+                builder.startArray("dynamic_templates")
+                        .startObject()
+                        .startObject("strings")
+                        .field("match_mapping_type", "string")
+                        .startObject("mapping")
+                        .field("type", "string")
+                        .startObject("fields")
+                        .startObject("raw")
+                        .field("type", "string")
+                        .field("index", "not_analyzed")
+                        .field("ignore_above", 256)
+                        .endObject()
+                        .endObject()
+                        .endObject()
+                        .endObject()
+                        .endObject()
+                        .endArray();
+            }
+
+            builder.endObject().endObject();
             client.admin().indices().preparePutMapping(indexName).setType(documentType).setSource(builder).execute()
                     .actionGet();
         } catch (Exception e) {
