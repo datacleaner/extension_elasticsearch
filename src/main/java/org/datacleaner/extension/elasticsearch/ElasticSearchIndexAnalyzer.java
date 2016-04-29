@@ -82,10 +82,12 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
     int bulkIndexSize = 2000;
 
     @Configured(required = false)
+    @Description("Disables automatic date field detection in ElasticSearch when fields are mapped as string types.")
     boolean automaticDateDetection = false;
 
     @Configured(required = false)
-    boolean keepStringFieldsNotAnalyzedAlso = true;
+    @Description("All fields(type=string, maxlength=256) indexed to ElasticSearch will also be kept in the raw 'not_analyzed' form. The raw fields can also be used in querying and are accessible as '{originalFieldName}.raw'")
+    boolean keepStringFieldsInRawForm = true;
 
     private AtomicInteger _counter;
     private WriteBuffer _writeBuffer;
@@ -127,7 +129,7 @@ public class ElasticSearchIndexAnalyzer implements Analyzer<WriteDataResult> {
                     .startObject(documentType)
                     .field("date_detection", automaticDateDetection);
 
-            if (keepStringFieldsNotAnalyzedAlso) {
+            if (keepStringFieldsInRawForm) {
                 builder.startArray("dynamic_templates")
                         .startObject()
                         .startObject("strings")
