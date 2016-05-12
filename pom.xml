@@ -41,7 +41,7 @@
 			<!-- Include DataCleaner as a provided dependency -->
 			<groupId>org.eobjects.datacleaner</groupId>
 			<artifactId>DataCleaner-desktop-ui</artifactId>
-			<version>5.0-RC2</version>
+			<version>5.0.2</version>
 			<scope>provided</scope>
 		</dependency>
 
