@@ -73,6 +73,8 @@ public class ElasticSearchFullSearchTransformerTest extends TestCase {
 
             _server.addDocument("cph", MapBuilder.newMapBuilder().put("city", "Copenhagen").put("country", "Denmark")
                     .map());
+            _server.addDocument("copenhagen", MapBuilder.newMapBuilder().put("capital", "Copenhagen").put("country", "Denmark")
+                    .map());
             _server.addDocument("ams", MapBuilder.newMapBuilder().put("city", "Amsterdam")
                     .put("country", "Netherlands").map());
             _server.addDocument("del", MapBuilder.newMapBuilder().put("city", "Delhi").put("country", "India").map());
@@ -80,7 +82,9 @@ public class ElasticSearchFullSearchTransformerTest extends TestCase {
             Object[] output;
 
             output = transformer.transform(new MockInputRow().put(col1, "Copenhagen"));
+            assertEquals(4,output.length);
             assertEquals("cph", String.valueOf(output[0]));
+            assertEquals("copenhagen", String.valueOf(output[2]));
 
             @SuppressWarnings("unchecked")
             Map<String, ?> map = (Map<String, ?>) output[1];

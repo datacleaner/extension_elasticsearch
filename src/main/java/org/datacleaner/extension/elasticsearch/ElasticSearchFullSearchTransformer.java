@@ -76,6 +76,9 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
     @Configured(order = 4, required = false)
     String searchFieldName;
     
+    @Configured(order = 5, required = true)
+    Integer getNumberOfResults = 10;
+    
     private UpdateableDatastoreConnection _connection;
     
     @Validate
@@ -114,11 +117,10 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
 
     @Override
     public Object[] transform(InputRow row) {
-        final Object[] result = new Object[2];
-
+        final Object[] emptyResult = new Object[2];
         final String input = row.getValue(searchInput);
         if (StringUtils.isNullOrEmpty(input)) {
-            return result;
+            return emptyResult;
         }
         try {
             final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) _connection.getDataContext();
@@ -140,15 +142,27 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
 
             final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
             final SearchHits hits = searchResponse.getHits();
-            if (hits.getTotalHits() == 0) {
+            int totalHits = (int) hits.getTotalHits();
+            if (totalHits == 0) {
+                return emptyResult;
+            } else {
+                final Object[] result;
+                if (totalHits < getNumberOfResults) {
+                    result = new Object[2 * totalHits];
+                } else {
+                    result = new Object[2 * getNumberOfResults];
+                }
+
+                int j = 0;
+                for (int i = 0; i < totalHits; i++) {
+                    final SearchHit hit = hits.getAt(i);
+                    result[j] = hit.getId();
+                    result[j + 1] = hit.sourceAsMap();
+                    j = j + 2;
+                }
                 return result;
             }
 
-            final SearchHit hit = hits.getAt(0);
-            result[0] = hit.getId();
-            result[1] = hit.sourceAsMap();
-
-            return result;
         } catch (Exception e) {
             logger.error("Exception while running the ElasticSearchFullSearchTransformer", e);
             throw e;
