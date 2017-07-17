@@ -24,15 +24,21 @@ import java.util.Map;
 import javax.inject.Named;
 
 import org.apache.metamodel.elasticsearch.nativeclient.ElasticSearchDataContext;
+import org.apache.metamodel.query.Query;
+import org.apache.metamodel.schema.ColumnType;
+import org.apache.metamodel.schema.ColumnTypeImpl;
 import org.apache.metamodel.util.FileHelper;
 import org.datacleaner.api.Categorized;
 import org.datacleaner.api.Close;
 import org.datacleaner.api.Configured;
 import org.datacleaner.api.Description;
+import org.datacleaner.api.HasOutputDataStreams;
 import org.datacleaner.api.Initialize;
 import org.datacleaner.api.InputColumn;
 import org.datacleaner.api.InputRow;
 import org.datacleaner.api.OutputColumns;
+import org.datacleaner.api.OutputDataStream;
+import org.datacleaner.api.OutputRowCollector;
 import org.datacleaner.api.TableProperty;
 import org.datacleaner.api.Validate;
 import org.datacleaner.components.categories.ImproveSuperCategory;
@@ -41,6 +47,8 @@ import org.datacleaner.connection.ElasticSearchDatastore;
 import org.datacleaner.connection.ElasticSearchDatastore.ClientType;
 import org.datacleaner.connection.UpdateableDatastoreConnection;
 import org.datacleaner.extension.elasticsearch.ui.IllegalElasticSearchConnectorException;
+import org.datacleaner.job.output.OutputDataStreamBuilder;
+import org.datacleaner.job.output.OutputDataStreams;
 import org.datacleaner.util.StringUtils;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -56,9 +64,11 @@ import org.slf4j.LoggerFactory;
 @Named("ElasticSearch full text search")
 @Description("Performs a full text search for every record into an ElasticSearch search index.")
 @Categorized(superCategory = ImproveSuperCategory.class, value = ReferenceDataCategory.class)
-public class ElasticSearchFullSearchTransformer implements ElasticSearchTransformer {
+public class ElasticSearchFullSearchTransformer implements ElasticSearchTransformer, HasOutputDataStreams {
+    
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchFullSearchTransformer.class);
+    public static final String OUTPUT_STREAM_ALL_ROWS = "All rows";
 
     @Configured
     InputColumn<String> searchInput;
@@ -77,8 +87,9 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
     String searchFieldName;
     
     @Configured(order = 5, required = true)
-    Integer getNumberOfResults = 10;
+    Integer getNumberOfResults = 1;
     
+    private OutputRowCollector allRowsCollector;
     private UpdateableDatastoreConnection _connection;
     
     @Validate
@@ -110,17 +121,17 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
 
     @Override
     public OutputColumns getOutputColumns() {
-        String[] names = new String[] { "Document ID", "Document" };
-        Class<?>[] types = new Class[] { String.class, Map.class };
-        return new OutputColumns(names, types);
+            final String[] names = new String[] { "Document ID", "Document" };
+            final Class<?>[] types = new Class[] { String.class, Map.class };
+            return new OutputColumns(names, types);
     }
 
     @Override
     public Object[] transform(InputRow row) {
-        final Object[] emptyResult = new Object[2];
+        final Object[] result = new Object[2];
         final String input = row.getValue(searchInput);
         if (StringUtils.isNullOrEmpty(input)) {
-            return emptyResult;
+            return result;
         }
         try {
             final ElasticSearchDataContext dataContext = (ElasticSearchDataContext) _connection.getDataContext();
@@ -144,28 +155,67 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
             final SearchHits hits = searchResponse.getHits();
             int totalHits = (int) hits.getTotalHits();
             if (totalHits == 0) {
-                return emptyResult;
-            } else {
-                final Object[] result;
-                if (totalHits < getNumberOfResults) {
-                    result = new Object[2 * totalHits];
-                } else {
-                    result = new Object[2 * getNumberOfResults];
-                }
-
-                int j = 0;
-                for (int i = 0; i < totalHits; i++) {
-                    final SearchHit hit = hits.getAt(i);
-                    result[j] = hit.getId();
-                    result[j + 1] = hit.sourceAsMap();
-                    j = j + 2;
+                if (allRowsCollector != null) {
+                    allRowsCollector.putValues(result);
                 }
                 return result;
+            } else {
+                if (getNumberOfResults > 1) {
+                    int nr = getNumberOfResults;
+                    if (getNumberOfResults > hits.totalHits()){
+                        nr = (int) hits.totalHits(); 
+                    }
+                    
+                    for (int i = 0; i < nr; i++) {
+                        final SearchHit hit = hits.getAt(i);
+                        result[0] = hit.getId();
+                        result[1] = hit.sourceAsMap();
+                        if (allRowsCollector != null) {
+                        allRowsCollector.putValues(result);
+                        }
+                    }
+                } else {
+                    final SearchHit hit = hits.getAt(0);
+                    result[0] = hit.getId();
+                    result[1] = hit.sourceAsMap();
+                    if (allRowsCollector != null) {
+                        allRowsCollector.putValues(result);
+                    }
+                    
+                    return result;
+                }
             }
 
         } catch (Exception e) {
             logger.error("Exception while running the ElasticSearchFullSearchTransformer", e);
             throw e;
+        }
+        return null;
+    }
+
+    @Override
+    public OutputDataStream[] getOutputDataStreams() {
+        return new OutputDataStream[] { createOutputStream(OUTPUT_STREAM_ALL_ROWS) };
+    }
+
+    private OutputDataStream createOutputStream(String outputStreamName) {
+        final OutputColumns outputColumns = getOutputColumns();
+        final OutputDataStreamBuilder outputStreamBuilder = OutputDataStreams.pushDataStream(outputStreamName);
+        for (int i = 0; i < outputColumns.getColumnCount(); i++) {
+            final String columnName = outputColumns.getColumnName(i);
+            final Class<?> outputColumnType = outputColumns.getColumnType(i);
+            final ColumnType columnType = ColumnTypeImpl.convertColumnType(outputColumnType);
+            outputStreamBuilder.withColumn(columnName, columnType);
+        } 
+        
+        return outputStreamBuilder.toOutputDataStream();
+    }
+
+    @Override
+    public void initializeOutputDataStream(OutputDataStream outputDataStream, Query query,
+            OutputRowCollector outputRowCollector) {
+        if (outputDataStream.getName().equals(OUTPUT_STREAM_ALL_ROWS)) {
+            allRowsCollector = outputRowCollector;
         }
     }
 }
