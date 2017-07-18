@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.inject.Named;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.metamodel.elasticsearch.nativeclient.ElasticSearchDataContext;
 import org.apache.metamodel.query.Query;
 import org.apache.metamodel.schema.ColumnType;
@@ -87,9 +88,10 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
     String searchFieldName;
     
     @Configured(order = 5, required = true)
+    @Description("Available only for output data streams")
     Integer getNumberOfResults = 1;
     
-    private OutputRowCollector allRowsCollector;
+    protected OutputRowCollector allRowsCollector;
     private UpdateableDatastoreConnection _connection;
     
     @Validate
@@ -104,6 +106,11 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
         default:
             // do nothing
         }
+     
+        if (getNumberOfResults < 1) {
+            throw new IllegalStateException("The minimum number of results is 1");
+        }
+        
     }
     
     @Initialize
@@ -121,8 +128,8 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
 
     @Override
     public OutputColumns getOutputColumns() {
-            final String[] names = new String[] { "Document ID", "Document" };
-            final Class<?>[] types = new Class[] { String.class, Map.class };
+            final String[] names = new String[] { "Document ID", "Document"};
+            final Class<?>[] types = new Class[] { String.class, Map.class};
             return new OutputColumns(names, types);
     }
 
@@ -149,38 +156,32 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
 
             final SearchRequestBuilder searchRequestBuilder = new SearchRequestBuilder(client)
                     .setIndices(elasticsearchDatastore.getIndexName()).setTypes(documentType).setQuery(query)
-                    .setSize(1).setSearchType(SearchType.QUERY_AND_FETCH).setExplain(true);
+                    .setSize(getNumberOfResults).setSearchType(SearchType.QUERY_AND_FETCH).setExplain(true);
 
             final SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
             final SearchHits hits = searchResponse.getHits();
             int totalHits = (int) hits.getTotalHits();
             if (totalHits == 0) {
                 if (allRowsCollector != null) {
-                    allRowsCollector.putValues(result);
+                    allRowsCollector.putValues( ArrayUtils.add(result, input));
                 }
                 return result;
             } else {
-                if (getNumberOfResults > 1) {
+                //maintain compatibility of old jobs
+                if (getNumberOfResults == 1) {
+                    getFirstResult(result, input, hits);
+                    return result;
+                }
+                else {
                     int nr = getNumberOfResults;
-                    if (getNumberOfResults > hits.totalHits()){
-                        nr = (int) hits.totalHits(); 
+                    if (getNumberOfResults > hits.totalHits()) {
+                        nr = (int) hits.totalHits();
                     }
-                    
-                    for (int i = 0; i < nr; i++) {
-                        final SearchHit hit = hits.getAt(i);
-                        result[0] = hit.getId();
-                        result[1] = hit.sourceAsMap();
-                        if (allRowsCollector != null) {
-                        allRowsCollector.putValues(result);
-                        }
-                    }
-                } else {
-                    final SearchHit hit = hits.getAt(0);
-                    result[0] = hit.getId();
-                    result[1] = hit.sourceAsMap();
-                    if (allRowsCollector != null) {
-                        allRowsCollector.putValues(result);
-                    }
+                    // make sure the first value is returned by the (normal)
+                    // output columns
+                    getFirstResult(result, input, hits);
+                    // The rest of the results are collected by the outputstream
+                    getRestOfResults(input, hits, nr);
                     
                     return result;
                 }
@@ -190,7 +191,29 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
             logger.error("Exception while running the ElasticSearchFullSearchTransformer", e);
             throw e;
         }
-        return null;
+    }
+
+    private void getRestOfResults(final String input, final SearchHits hits, int nr) {
+        final Object[] extraResults = new Object[3];
+        for (int i = 1; i < nr; i++) {
+            final SearchHit hit = hits.getAt(i);
+            extraResults[0] = hit.getId();
+            extraResults[1] = hit.sourceAsMap();
+            extraResults[2] = input;
+
+            if (allRowsCollector != null) {
+                allRowsCollector.putValues(extraResults);
+            }
+        }
+    }
+
+    private void getFirstResult(final Object[] result, final String input, final SearchHits hits) {
+        final SearchHit hit = hits.getAt(0);
+        result[0] = hit.getId();
+        result[1] = hit.sourceAsMap();
+        if (allRowsCollector != null) {
+            allRowsCollector.putValues(ArrayUtils.add(result, input));
+        }
     }
 
     @Override
@@ -208,6 +231,8 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
             outputStreamBuilder.withColumn(columnName, columnType);
         } 
         
+        final ColumnType columnType = ColumnTypeImpl.convertColumnType(searchInput.getDataType());
+        outputStreamBuilder.withColumn(searchInput.getName(), columnType);
         return outputStreamBuilder.toOutputDataStream();
     }
 
