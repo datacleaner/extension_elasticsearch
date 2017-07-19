@@ -88,7 +88,7 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
     String searchFieldName;
     
     @Configured(order = 5, required = true)
-    @Description("Available only for output data streams")
+    @Description("Result sizes above 1 only available for output data stream")
     Integer getNumberOfResults = 1;
     
     protected OutputRowCollector allRowsCollector;
@@ -108,7 +108,7 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
         }
      
         if (getNumberOfResults < 1) {
-            throw new IllegalStateException("The minimum number of results is 1");
+            throw new IllegalStateException("Value of property \"Maximum number of results\" cannot be below 1");
         }
         
     }
@@ -128,9 +128,9 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
 
     @Override
     public OutputColumns getOutputColumns() {
-            final String[] names = new String[] { "Document ID", "Document"};
-            final Class<?>[] types = new Class[] { String.class, Map.class};
-            return new OutputColumns(names, types);
+        final String[] names = new String[] { "Document ID", "Document" };
+        final Class<?>[] types = new Class[] { String.class, Map.class };
+        return new OutputColumns(names, types);
     }
 
     @Override
@@ -167,24 +167,21 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
                 }
                 return result;
             } else {
-                //maintain compatibility of old jobs
-                if (getNumberOfResults == 1) {
-                    getFirstResult(result, input, hits);
-                    return result;
-                }
-                else {
-                    int nr = getNumberOfResults;
-                    if (getNumberOfResults > hits.totalHits()) {
-                        nr = (int) hits.totalHits();
+
+                int fetchSize = Math.min(getNumberOfResults, totalHits);
+
+                for (int i = 0; i < fetchSize; i++) {
+                    final SearchHit hit = hits.getAt(i);
+                    if (i == 0) {
+                        result[0] = hit.getId();
+                        result[1] = hit.sourceAsMap();
                     }
-                    // make sure the first value is returned by the (normal)
-                    // output columns
-                    getFirstResult(result, input, hits);
-                    // The rest of the results are collected by the outputstream
-                    getRestOfResults(input, hits, nr);
-                    
-                    return result;
+                    if (allRowsCollector != null) {
+                        allRowsCollector.putValues(hit.getId(), hit.sourceAsMap(), input);
+                    }
                 }
+
+                return result;
             }
 
         } catch (Exception e) {
@@ -192,29 +189,7 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
             throw e;
         }
     }
-
-    private void getRestOfResults(final String input, final SearchHits hits, int nr) {
-        final Object[] extraResults = new Object[3];
-        for (int i = 1; i < nr; i++) {
-            final SearchHit hit = hits.getAt(i);
-            extraResults[0] = hit.getId();
-            extraResults[1] = hit.sourceAsMap();
-            extraResults[2] = input;
-
-            if (allRowsCollector != null) {
-                allRowsCollector.putValues(extraResults);
-            }
-        }
-    }
-
-    private void getFirstResult(final Object[] result, final String input, final SearchHits hits) {
-        final SearchHit hit = hits.getAt(0);
-        result[0] = hit.getId();
-        result[1] = hit.sourceAsMap();
-        if (allRowsCollector != null) {
-            allRowsCollector.putValues(ArrayUtils.add(result, input));
-        }
-    }
+    
 
     @Override
     public OutputDataStream[] getOutputDataStreams() {
