@@ -162,9 +162,6 @@ public class ElasticSearchFullSearchTransformer implements ElasticSearchTransfor
             final SearchHits hits = searchResponse.getHits();
             int totalHits = (int) hits.getTotalHits();
             if (totalHits == 0) {
-                if (allRowsCollector != null) {
-                    allRowsCollector.putValues( ArrayUtils.add(result, input));
-                }
                 return result;
             } else {
 
