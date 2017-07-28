@@ -3,12 +3,15 @@
 	<parent>
 		<groupId>org.eobjects.datacleaner</groupId>
 		<artifactId>DataCleaner</artifactId>
-		<version>5.0.2</version>
+		<version>5.2.0</version>
 	</parent>
 	<groupId>org.eobjects.datacleaner.extensions</groupId>
 	<artifactId>DataCleaner-elasticsearch</artifactId>
 	<version>2.14-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<properties>
+		<checkstyle.skip>true</checkstyle.skip>
+	</properties>
 
 	<scm>
 		<url>https://github.com/datacleaner/extension_elasticsearch</url>
@@ -41,7 +44,7 @@
 			<!-- Include DataCleaner as a provided dependency -->
 			<groupId>org.eobjects.datacleaner</groupId>
 			<artifactId>DataCleaner-desktop-ui</artifactId>
-			<version>5.0.2</version>
+			<version>5.2.0</version>
 			<scope>provided</scope>
 		</dependency>
 
